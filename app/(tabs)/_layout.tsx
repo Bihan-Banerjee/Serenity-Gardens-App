@@ -69,7 +69,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🦋" label="Explore" focused={focused} />
+            <TabIcon icon="🔍" label="Explore" focused={focused} />
           ),
         }}
       />
