@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Serenity Gardens",
+    "slug": "serenity-gardens",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "serenitygardens",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.serenitygardens.app"
+    },
+    "android": {
+      "package": "com.serenitygardens.app"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
