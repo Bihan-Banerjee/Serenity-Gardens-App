@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,69 +20,18 @@ import { Theme } from '../../constants/theme';
 import { useCartStore } from '../../store/useCartStore';
 import { itemsAPI } from '../../lib/api';
 
-// Fallback data if API is not connected
-const DEMO_ITEMS = [
-  {
-    _id: '1',
-    name: 'Fresh Rohu Fish',
-    category: 'Fish',
-    price: 180,
-    unit: 'per kg',
-    image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=75',
-    description: 'Freshly caught from our organic ponds.',
-    inStock: true,
-  },
-  {
-    _id: '2',
-    name: 'Organic Cabbage',
-    category: 'Vegetables',
-    price: 35,
-    unit: 'per piece',
-    image: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=400&q=75',
-    description: 'Chemical-free, grown in our kitchen garden.',
-    inStock: true,
-  },
-  {
-    _id: '3',
-    name: 'Garden Roses',
-    category: 'Flowers',
-    price: 120,
-    unit: 'per dozen',
-    image: 'https://images.unsplash.com/photo-1490750967868-88df5691cc91?w=400&q=75',
-    description: 'Hand-picked, fresh garden roses.',
-    inStock: true,
-  },
-  {
-    _id: '4',
-    name: 'Wild Mushrooms',
-    category: 'Vegetables',
-    price: 95,
-    unit: 'per 250g',
-    image: 'https://images.unsplash.com/photo-1504708001879-c57d2c8b7f0e?w=400&q=75',
-    description: 'Foraged and cultivated mushrooms.',
-    inStock: true,
-  },
-  {
-    _id: '5',
-    name: 'Catla Fish',
-    category: 'Fish',
-    price: 220,
-    unit: 'per kg',
-    image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=75',
-    description: 'Premium catla from our fish farms.',
-    inStock: false,
-  },
-  {
-    _id: '6',
-    name: 'Seasonal Greens',
-    category: 'Vegetables',
-    price: 50,
-    unit: 'per bundle',
-    image: 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?w=400&q=75',
-    description: 'Mixed seasonal greens from our beds.',
-    inStock: true,
-  },
-];
+// Matches your MongoDB Item Schema
+export interface Item {
+  _id: string;
+  name: string;
+  price: number;
+  description: string;
+  image: string;
+  stock: number;
+  finalized: boolean;
+  category?: string; // Optional if your backend doesn't send it yet
+  unit?: string;     // Optional
+}
 
 const CATEGORIES = ['All', 'Fish', 'Vegetables', 'Flowers'];
 
@@ -95,7 +43,6 @@ function CartSheet({
   onClose: () => void;
 }) {
   const items = useCartStore((s) => s.items);
-  const removeItem = useCartStore((s) => s.removeItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const total = useCartStore((s) => s.totalPrice());
   const router = useRouter();
@@ -146,14 +93,14 @@ function CartSheet({
                   {items.map((item) => (
                     <View key={item._id} style={styles.cartItem}>
                       <Image
-                        source={{ uri: item.image }}
+                        source={{ uri: item.image || 'https://via.placeholder.com/150' }}
                         style={styles.cartItemImage}
                         resizeMode="cover"
                       />
                       <View style={styles.cartItemInfo}>
                         <Text style={styles.cartItemName}>{item.name}</Text>
                         <Text style={styles.cartItemPrice}>
-                          ₹{item.price} {item.unit}
+                          ₹{item.price} {item.unit || 'pc'}
                         </Text>
                       </View>
                       <View style={styles.qtyControl}>
@@ -211,16 +158,18 @@ function CartSheet({
   );
 }
 
-function ProductCard({ item }: { item: (typeof DEMO_ITEMS)[0] }) {
+function ProductCard({ item }: { item: Item }) {
   const addItem = useCartStore((s) => s.addItem);
   const cartItems = useCartStore((s) => s.items);
   const inCart = cartItems.find((i) => i._id === item._id);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const isOutOfStock = item.stock <= 0;
 
   const handleAdd = () => {
-    if (!item.inStock) return;
+    if (isOutOfStock) return;
+    
     Animated.sequence([
       Animated.spring(scaleAnim, {
         toValue: 0.94,
@@ -235,13 +184,14 @@ function ProductCard({ item }: { item: (typeof DEMO_ITEMS)[0] }) {
         useNativeDriver: true,
       }),
     ]).start();
+    
     addItem({
       _id: item._id,
       name: item.name,
       price: item.price,
-      image: item.image,
-      category: item.category,
-      unit: item.unit,
+      image: item.image || 'https://via.placeholder.com/150',
+      category: item.category || 'Store',
+      unit: item.unit || 'pc',
     });
   };
 
@@ -251,17 +201,17 @@ function ProductCard({ item }: { item: (typeof DEMO_ITEMS)[0] }) {
     >
       <View style={styles.productImageContainer}>
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item.image || 'https://via.placeholder.com/150' }}
           style={styles.productImage}
           resizeMode="cover"
         />
-        {!item.inStock && (
+        {isOutOfStock && (
           <View style={styles.outOfStockOverlay}>
             <Text style={styles.outOfStockText}>Out of Stock</Text>
           </View>
         )}
         <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>{item.category}</Text>
+          <Text style={styles.categoryBadgeText}>{item.category || 'Store'}</Text>
         </View>
       </View>
 
@@ -270,12 +220,12 @@ function ProductCard({ item }: { item: (typeof DEMO_ITEMS)[0] }) {
           {item.name}
         </Text>
         <Text style={styles.productDesc} numberOfLines={2}>
-          {item.description}
+          {item.description || 'Freshly picked.'}
         </Text>
         <View style={styles.productFooter}>
           <View>
             <Text style={styles.productPrice}>₹{item.price}</Text>
-            <Text style={styles.productUnit}>{item.unit}</Text>
+            <Text style={styles.productUnit}>{item.unit || 'pc'}</Text>
           </View>
 
           {inCart ? (
@@ -289,16 +239,22 @@ function ProductCard({ item }: { item: (typeof DEMO_ITEMS)[0] }) {
               <Text style={styles.qtyNum}>{inCart.quantity}</Text>
               <Pressable
                 style={styles.qtyBtn}
-                onPress={() => updateQuantity(item._id, inCart.quantity + 1)}
+                onPress={() => {
+                  if (inCart.quantity >= item.stock) {
+                     Alert.alert("Stock Limit", "You have reached the maximum available stock for this item.");
+                     return;
+                  }
+                  updateQuantity(item._id, inCart.quantity + 1)
+                }}
               >
                 <Text style={styles.qtyBtnText}>+</Text>
               </Pressable>
             </View>
           ) : (
             <Pressable
-              style={[styles.addBtn, !item.inStock && styles.addBtnDisabled]}
+              style={[styles.addBtn, isOutOfStock && styles.addBtnDisabled]}
               onPress={handleAdd}
-              disabled={!item.inStock}
+              disabled={isOutOfStock}
             >
               <Text style={styles.addBtnText}>+ Add</Text>
             </Pressable>
@@ -311,26 +267,26 @@ function ProductCard({ item }: { item: (typeof DEMO_ITEMS)[0] }) {
 
 export default function MenuScreen() {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [items, setItems] = useState(DEMO_ITEMS);
-  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
   const [cartVisible, setCartVisible] = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
 
   useEffect(() => {
-    // Try to fetch from API; fall back to demo data silently
-    const fetchItems = async () => {
-      try {
-        setLoading(true);
-        const res = await itemsAPI.getAll();
-        if (res.data?.length) setItems(res.data);
-      } catch {
-        // Use demo data (API not connected)
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchItems();
   }, []);
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      const res = await itemsAPI.getAll();
+      if (res.data?.length) setItems(res.data);
+    } catch {
+      Alert.alert("Error", "Could not load store items. Check your internet connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered =
     activeCategory === 'All'
@@ -401,6 +357,9 @@ export default function MenuScreen() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => <ProductCard item={item} />}
           ListFooterComponent={<View style={{ height: 32 }} />}
+          ListEmptyComponent={
+            <Text style={{ textAlign: 'center', marginTop: 40, color: Colors.textMuted }}>No items found in this category.</Text>
+          }
         />
       )}
 

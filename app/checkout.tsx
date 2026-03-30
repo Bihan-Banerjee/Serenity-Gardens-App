@@ -18,6 +18,7 @@ import { Theme } from '../constants/theme';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { ordersAPI } from '../lib/api';
+import RazorpayCheckout from 'react-native-razorpay';
 
 const PAYMENT_METHODS = [
   { id: 'cod', label: 'Cash on Delivery', emoji: '💵', desc: 'Pay when you receive' },
@@ -101,6 +102,18 @@ export default function CheckoutScreen() {
   const delivery = subtotal > 500 ? 0 : 40;
   const total = subtotal + delivery;
 
+  // --- ADDED HELPER FUNCTION ---
+  const finishOrderSuccess = () => {
+    setOrdered(true);
+    clearCart();
+    Animated.spring(successAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const handlePlaceOrder = async () => {
     if (!name.trim() || !phone.trim() || !address.trim()) {
       Alert.alert('Missing Details', 'Please fill in your name, phone, and address.');
@@ -124,37 +137,48 @@ export default function CheckoutScreen() {
 
     try {
       setLoading(true);
-      await ordersAPI.create({
-        items: items.map((i) => ({
-          name: i.name,
-          quantity: i.quantity,
-          price: i.price,
-          itemId: i._id,
-        })),
+      
+      // 1. Create order on YOUR backend first (which returns Razorpay order_id)
+      const orderRes = await ordersAPI.create({
+        items: items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price, itemId: i._id })),
         total,
         paymentMethod,
         deliveryAddress: { name, phone, address, notes },
-        paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
       });
-
-      setOrdered(true);
-      clearCart();
-      Animated.spring(successAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
+    
+      if (paymentMethod === 'cod') {
+        finishOrderSuccess(); 
+        return;
+      }
+    
+      // 2. Open Razorpay Native UI
+      const options = {
+        description: 'Serenity Gardens Order',
+        image: 'https://yourwebsite.com/logo.jpg', // Replace with your hosted logo
+        currency: 'INR',
+        key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your test/live key
+        amount: total * 100, // Amount in paise
+        name: 'Serenity Gardens',
+        order_id: orderRes.data.razorpayOrderId, // The ID from your backend
+        prefill: { email: user?.email, contact: phone, name: name },
+        theme: { color: Colors.primary }
+      };
+    
+      RazorpayCheckout.open(options).then(async (data:any) => {
+        // 3. Verify payment on your backend
+        await ordersAPI.verifyPayment({
+          razorpay_payment_id: data.razorpay_payment_id,
+          razorpay_order_id: data.razorpay_order_id,
+          razorpay_signature: data.razorpay_signature
+        });
+        finishOrderSuccess(); 
+      }).catch((err:any) => {
+        console.log("Razorpay Checkout Error:", err);
+        Alert.alert("Payment Failed", "Your transaction was cancelled or failed.");
+      });
+    
     } catch (err: any) {
-      // For demo / offline mode, still show success
-      setOrdered(true);
-      clearCart();
-      Animated.spring(successAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
+      Alert.alert('Checkout Error', err.message || 'Something went wrong.');
     } finally {
       setLoading(false);
     }

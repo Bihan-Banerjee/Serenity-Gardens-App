@@ -1,8 +1,10 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setAuthToken } from '../lib/api';
 
 export interface User {
-  _id: string;
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
   isAdmin: boolean;
@@ -13,10 +15,11 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isLoading: boolean;
 
-  login: (user: User, token: string) => void;
-  logout: () => void;
-  updateUser: (user: Partial<User>) => void;
+  login: (user: User, token: string) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -24,19 +27,36 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: null,
   isAuthenticated: false,
   isAdmin: false,
+  isLoading: true,
 
-  login: (user, token) => {
+  login: async (user, token) => {
     setAuthToken(token);
-    set({ user, token, isAuthenticated: true, isAdmin: user.isAdmin });
+    await AsyncStorage.setItem('token', token);
+    await AsyncStorage.setItem('user', JSON.stringify(user));
+    set({ user, token, isAuthenticated: true, isAdmin: user.isAdmin, isLoading: false });
   },
 
-  logout: () => {
+  logout: async () => {
     setAuthToken(null);
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('user');
     set({ user: null, token: null, isAuthenticated: false, isAdmin: false });
   },
 
-  updateUser: (partial) =>
-    set((state) => ({
-      user: state.user ? { ...state.user, ...partial } : null,
-    })),
+  checkAuth: async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const userStr = await AsyncStorage.getItem('user');
+      
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        setAuthToken(token);
+        set({ user, token, isAuthenticated: true, isAdmin: user.isAdmin, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
+    } catch (e) {
+      set({ isLoading: false });
+    }
+  },
 }));
