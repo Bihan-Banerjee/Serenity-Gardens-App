@@ -19,10 +19,10 @@ import { Theme } from '../../constants/theme';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const HERO_IMAGES = [
-  { uri: 'https://images.unsplash.com/photo-1416879107082-7dd74f3d32f6?w=800&q=80', tag: '' },
-  { uri: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80', tag: '' },
-  { uri: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&q=80', tag: '' },
-  { uri: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80', tag: '' },
+  { uri: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1766638884/WhatsApp_Image_2025-12-05_at_11.20.171_rsdmwn.jpg', tag: '' },
+  { uri: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1766638885/WhatsApp_Image_2025-12-05_at_11.42.50_lh3or7.jpg', tag: '' },
+  { uri: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1766638884/WhatsApp_Image_2025-12-05_at_11.20.16_xhcfgq.jpg', tag: '' },
+  { uri: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1766638883/WhatsApp_Image_2025-12-05_at_10.43.551_x2y2k6.jpg', tag: '' },
 ];
 
 const FEATURES = [
@@ -31,7 +31,7 @@ const FEATURES = [
   { emoji: '🛒', title: 'Shop', subtitle: 'Fresh From Farm', route: '/menu', color: '#FFF3CD' },
   { emoji: '⭐', title: 'Reviews', subtitle: 'Our Guests Say', route: '/reviews', color: '#F8D7DA' },
   { emoji: '🏡', title: 'About Us', subtitle: 'Our Story', route: '/about', color: '#E2D9F3' },
-  { emoji: '📅', title: 'Visit Us', subtitle: 'Plan Your Trip', route: '/about', color: '#D4EDDA' },
+  { emoji: '👤', title: 'Your Profile', subtitle: 'View account history', route: '/profile', color: '#D4EDDA' },
 ];
 
 const MARQUEE_ITEMS = [

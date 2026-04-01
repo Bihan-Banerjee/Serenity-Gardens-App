@@ -24,20 +24,17 @@ interface ExploreItem {
   name: string;
   category: Exclude<Category, 'All'>;
   description: string;
-  emoji: string;
   image: string;
   highlight?: string;
 }
 
 const ITEMS: ExploreItem[] = [
-  { id: '1', name: 'Rose Garden', category: 'Flora', description: 'Over 40 varieties of roses blooming across the estate.', emoji: '🌹', image: 'https://images.unsplash.com/photo-1490750967868-88df5691cc91?w=400&q=75', highlight: 'Over 40 varieties' },
-  { id: '2', name: 'Kingfisher', category: 'Fauna', description: 'Common kingfishers nest near the eastern pond.', emoji: '🐦', image: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&q=75', highlight: 'Resident bird' },
-  { id: '3', name: 'Lotus Pond', category: 'Ponds', description: 'A serene pond carpeted with pink and white lotus.', emoji: '🪷', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=75', highlight: 'Year-round blooms' },
-  { id: '4', name: 'Vegetable Beds', category: 'Farm', description: 'Organically farmed cabbages, tomatoes, greens, and herbs.', emoji: '🥬', image: 'https://images.unsplash.com/photo-1416879107082-7dd74f3d32f6?w=400&q=75', highlight: 'Chemical-free' },
-  { id: '5', name: 'Mushroom Grove', category: 'Flora', description: 'Wild and cultivated mushrooms thrive in the damp corners.', emoji: '🍄', image: 'https://images.unsplash.com/photo-1504708001879-c57d2c8b7f0e?w=400&q=75' },
-  { id: '6', name: 'Rohu & Catla', category: 'Ponds', description: 'Our fish ponds are home to rohu, catla, and mrigal.', emoji: '🐟', image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=75', highlight: 'Pisciculture' },
-  { id: '7', name: 'Purple Martin', category: 'Fauna', description: 'Purple martins are spotted near the herb garden at dusk.', emoji: '🐝', image: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&q=75' },
-  { id: '8', name: 'Solar Array', category: 'Farm', description: 'Our rooftop solar panels power 80% of the estate\'s needs.', emoji: '☀️', image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&q=75', highlight: '80% renewable' },
+  { id: '1', name: 'Family Picnic', category: 'Farm', description: 'Perfect getaway spot for family picnics.', image: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1775048793/picnic_vnwepx.jpg'},
+  { id: '2', name: 'Evening Escapade', category: 'Flora', description: 'Escape the city buzz and enjoy an evening under the stars.', image: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1775050378/lawn_vqkxlw.png' },
+  { id: '3', name: 'Bird Haven', category: 'Fauna', description: 'Regular sightings of colorful songbirds, cormorants and majestic kingfishers.',  image: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1748433091/bird_s4yydk.jpg', highlight: '30+ species' },
+  { id: '4', name: 'Pond of Life', category: 'Ponds', description: 'Teeming with fish, crabs, etc., it offers a serene spot for reflection and relaxation.',  image: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1775048803/pond_apy4sa.jpg' },
+  { id: '5', name: 'Vermicompost Area', category: 'Fauna', description: 'Where organic waste is broken down into nutrient rich compost by earthworms.',  image: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1775050769/worm_ja7k3q.png', highlight: 'Fertilizer sold too!' },
+  { id: '6', name: 'Photoshoot Spot', category: 'Farm', description: 'A picturesque gazebo, lawn, and pond surrounded by vibrant flowers, ideal for memorable photoshoots.', image: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1766638884/WhatsApp_Image_2025-12-05_at_11.20.171_rsdmwn.jpg'},
 ];
 
 const CATEGORIES: Category[] = ['All', 'Flora', 'Fauna', 'Ponds', 'Farm'];
@@ -90,7 +87,7 @@ function ExploreCard({ item, delay }: { item: ExploreItem; delay: number }) {
           </View>
         )}
         <Text style={styles.cardName}>{item.name}</Text>
-        <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+        <Text style={styles.cardDesc} numberOfLines={4}>{item.description}</Text>
       </View>
     </Animated.View>
   );
