@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   Pressable, Animated, Alert, ActivityIndicator, Dimensions,
+  FlatList, LayoutAnimation, UIManager, Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/colors';
@@ -9,48 +10,98 @@ import { Theme } from '../constants/theme';
 import { reviewsAPI } from '../lib/api';
 import { useAuthStore } from '../store/useAuthStore';
 
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 const { width: W } = Dimensions.get('window');
 
 interface Review {
   _id?: string;
   name: string;
-  review: string;   // backend field is "review", not "message"
+  review: string;
   rating: number;
   createdAt?: string;
 }
 
-const SEED: Review[] = [
-  { _id: 's1', name: 'Priya Sharma',   rating: 5, review: 'An absolute gem! The lotus pond at dawn was the most peaceful thing I\'ve ever experienced. Freshest fish I\'ve ever had.', createdAt: '2024-11-10' },
-  { _id: 's2', name: 'Rohan Ghosh',    rating: 5, review: 'Visited last monsoon — the entire place transformed into something magical. The organic vegetables are exceptional quality.', createdAt: '2024-08-22' },
-  { _id: 's3', name: 'Ananya Bose',    rating: 4, review: 'Ordered the rose bouquet for my anniversary — delivered fresh and fragrant. Highly recommend the weekend tours!', createdAt: '2024-12-01' },
-  { _id: 's4', name: 'Subhajit Das',   rating: 5, review: 'The pisciculture setup is fascinating. Got to see the whole process. Kids loved it. Will definitely come back.', createdAt: '2025-01-15' },
-  { _id: 's5', name: 'Meera Patel',    rating: 5, review: 'Serenity by name, serenity by nature. I left feeling lighter than I had in months. The chai and picnic experience is unmissable.', createdAt: '2025-02-08' },
+const hardcodedTestimonials = [
+  { name: "Suvankar Chakraborty", review: "We visited this Serenity gardens for our get together with old friends. The ambience is too good. The hospitality by the caretaker was amazing and food served was tasty and hygienic.", rating: 5 },
+  { name: "Soma Gupta", review: "Excellent farm house with lot of places for children to play, colorful snaps and adda. Food and hospitality served needs special mention... really too tasty.", rating: 5 },
+  { name: "Parna Banerjee", review: "My recent visit at Serenity Gardens was delightful. Nestled in serene green environment, perfect escape from daily life. Blend of modern amenities with tranquil nature.", rating: 5 },
+  { name: "Kankani Mukherjee", review: "Mesmerising atmosphere, eye soothing greenery with fruits, vegetables and flower plants. Ideal place for get together with all amenities. Must visit!", rating: 5 },
+  { name: "Sutreyi", review: "It is B-E-A-U-T-I-F-U-L...💚", rating: 5 },
+  { name: "Madhumita Chatterjee", review: "Serenity Garden - huge tranquil plot beautified with flowers, fruits, vegetables and decorative planters. Worth spending a whole day for relaxation.", rating: 5 },
+  { name: "SRABANI CHAKRABORTY", review: "The scenic beauty of this place is amazing, every part full of greenery.", rating: 5 },
+  { name: "Paramita Roy", review: "Aesthetically decorated, neat and well maintained Farm House. Food was amazing. Worth a visit.", rating: 5 },
 ];
 
-// ── Marquee ───────────────────────────────────────────────
+// Map hardcoded testimonials to match the Review interface
+const SEED: Review[] = hardcodedTestimonials.map((t, i) => ({
+  _id: `hardcoded-${i}`,
+  name: t.name,
+  review: t.review,
+  rating: t.rating,
+  createdAt: new Date().toISOString(),
+}));
+
+// ── Swipeable Auto-Scrolling Marquee ──────────────────────
 function Marquee({ reviews }: { reviews: Review[] }) {
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const CARD_W = 260 + 16;
-  const total = reviews.length * CARD_W;
+  const scrollRef = useRef<FlatList>(null);
+  const activeIndex = useRef(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Exact math: 260px width + 16px right margin = 276px total space per card
+  const CARD_W = 276; 
+  const all = [...reviews, ...reviews, ...reviews];
+
+  const startAutoScroll = () => {
+    stopAutoScroll();
+    timerRef.current = setInterval(() => {
+      if (all.length === 0) return;
+      activeIndex.current = (activeIndex.current + 1) % all.length;
+      try {
+        scrollRef.current?.scrollToIndex({ index: activeIndex.current, animated: true });
+      } catch (e) {}
+    }, 3000); // Scrolls every 3 seconds
+  };
+
+  const stopAutoScroll = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+  };
 
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.timing(scrollX, {
-        toValue: -total,
-        duration: total * 40,
-        useNativeDriver: true,
-      })
-    );
-    anim.start();
-    return () => anim.stop();
+    if (all.length > 0) startAutoScroll();
+    return () => stopAutoScroll();
   }, [reviews.length]);
 
-  const all = [...reviews, ...reviews];
+  if (reviews.length === 0) return null;
+
   return (
     <View style={mq.wrap}>
-      <Animated.View style={[mq.track, { transform: [{ translateX: scrollX }] }]}>
-        {all.map((r, i) => (
-          <View key={`${r._id}-${i}`} style={[mq.card, { width: 260 }]}>
+      <FlatList
+        ref={scrollRef}
+        data={all}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={CARD_W}
+        decelerationRate="fast"
+        contentContainerStyle={{ paddingLeft: 16 }}
+        onScrollBeginDrag={stopAutoScroll} // Stop auto-play when user touches
+        onScrollEndDrag={startAutoScroll}  // Resume when user lets go
+        onMomentumScrollEnd={(e) => {
+          // Sync index if user swiped manually
+          const newIndex = Math.round(e.nativeEvent.contentOffset.x / CARD_W);
+          activeIndex.current = newIndex;
+        }}
+        getItemLayout={(_, index) => ({
+          length: CARD_W,
+          offset: CARD_W * index,
+          index,
+        })}
+        keyExtractor={(_, i) => String(i)}
+        renderItem={({ item: r }) => (
+          <View style={[mq.card, { width: 260, marginRight: 16 }]}>
             <View style={mq.stars}>
               {Array.from({ length: 5 }).map((_, si) => (
                 <Text key={si} style={si < r.rating ? mq.starOn : mq.starOff}>★</Text>
@@ -59,13 +110,13 @@ function Marquee({ reviews }: { reviews: Review[] }) {
             <Text style={mq.msg} numberOfLines={4}>"{r.review}"</Text>
             <View style={mq.foot}>
               <View style={mq.avatar}>
-                <Text style={mq.avatarTxt}>{r.name[0].toUpperCase()}</Text>
+                <Text style={mq.avatarTxt}>{r.name[0]?.toUpperCase()}</Text>
               </View>
               <Text style={mq.name}>{r.name}</Text>
             </View>
           </View>
-        ))}
-      </Animated.View>
+        )}
+      />
     </View>
   );
 }
@@ -75,7 +126,11 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
   return (
     <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
       {[1,2,3,4,5].map(s => (
-        <Pressable key={s} onPress={() => onChange(s)}>
+        <Pressable 
+          key={s} 
+          onPress={() => onChange(s)}
+          style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.75 : 1 }] }]}
+        >
           <Text style={{ fontSize: 34, color: s <= value ? Colors.accent : Colors.cardBorder }}>★</Text>
         </Pressable>
       ))}
@@ -98,7 +153,7 @@ function ReviewCard({ r, idx }: { r: Review; idx: number }) {
     <Animated.View style={[rc.card, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0,1], outputRange: [16,0] }) }] }]}>
       <View style={rc.header}>
         <View style={rc.avatar}>
-          <Text style={rc.avatarTxt}>{r.name[0].toUpperCase()}</Text>
+          <Text style={rc.avatarTxt}>{r.name[0]?.toUpperCase()}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <Text style={rc.name}>{r.name}</Text>
@@ -125,8 +180,19 @@ export default function ReviewsScreen() {
 
   const fetchReviews = () => {
     reviewsAPI.getAll()
-      .then(res => { if (res.data?.length) setReviews(res.data); })
-      .catch(() => {});
+      .then(res => { 
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        if (res.data?.length) {
+          // Combine Backend DB reviews with hardcoded testimonials
+          setReviews([...res.data, ...SEED]); 
+        } else {
+          setReviews(SEED);
+        }
+      })
+      .catch(() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setReviews(SEED);
+      });
   };
 
   useEffect(() => { fetchReviews(); }, []);
@@ -138,8 +204,9 @@ export default function ReviewsScreen() {
       return Alert.alert('Too Short', 'Write at least 10 characters.');
     try {
       setSubmitting(true);
-      // IMPORTANT: backend field is "review" not "message"
       await reviewsAPI.create({ name: name.trim(), review: message.trim(), rating });
+      
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setSubmitted(true);
       setMessage('');
       setRating(5);
@@ -154,7 +221,7 @@ export default function ReviewsScreen() {
   const avg = (reviews.reduce((s,r) => s + r.rating, 0) / (reviews.length || 1)).toFixed(1);
 
   return (
-    <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={s.container} showsVerticalScrollIndicator={false} bounces={true}>
       {/* Banner */}
       <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={s.banner}>
         <Text style={s.bannerEmoji}>⭐</Text>
@@ -174,7 +241,7 @@ export default function ReviewsScreen() {
         </View>
       </LinearGradient>
 
-      {/* Marquee */}
+      {/* Swipeable Marquee */}
       <Marquee reviews={reviews} />
 
       {/* Submit form */}
@@ -186,7 +253,16 @@ export default function ReviewsScreen() {
             <Text style={{ fontSize: 48, marginBottom: 12 }}>🙏</Text>
             <Text style={s.successTitle}>Thank you!</Text>
             <Text style={s.successSub}>Your review was submitted successfully.</Text>
-            <Pressable style={s.anotherBtn} onPress={() => setSubmitted(false)}>
+            <Pressable 
+              style={({ pressed }) => [
+                s.anotherBtn,
+                { opacity: pressed ? 0.6 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] }
+              ]} 
+              onPress={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setSubmitted(false);
+              }}
+            >
               <Text style={s.anotherBtnTxt}>Write another →</Text>
             </Pressable>
           </View>
@@ -213,7 +289,15 @@ export default function ReviewsScreen() {
               multiline
               numberOfLines={5}
             />
-            <Pressable style={s.submitBtn} onPress={handleSubmit} disabled={submitting}>
+            {/* Highly responsive submit button */}
+            <Pressable 
+              style={({ pressed }) => [
+                { borderRadius: Theme.borderRadius.full, overflow: 'hidden', marginTop: 16 },
+                { opacity: pressed ? 0.75 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] }
+              ]} 
+              onPress={handleSubmit} 
+              disabled={submitting}
+            >
               <LinearGradient
                 colors={[Colors.primaryLight, Colors.primary]}
                 style={s.submitGrad}
@@ -259,7 +343,6 @@ const s = StyleSheet.create({
   formCard: { backgroundColor: Colors.card, borderRadius: Theme.borderRadius.xl, padding: 20, borderWidth: 1, borderColor: Colors.cardBorder, shadowColor: Colors.text, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   lbl:      { fontSize: 12, fontWeight: '700', color: Colors.textSecondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.4 },
   input:    { backgroundColor: Colors.background, borderWidth: 1.5, borderColor: Colors.cardBorder, borderRadius: Theme.borderRadius.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.text, marginBottom: 4 },
-  submitBtn:  { borderRadius: Theme.borderRadius.full, overflow: 'hidden', marginTop: 16 },
   submitGrad: { paddingVertical: 15, alignItems: 'center' },
   submitTxt:  { color: Colors.white, fontSize: 16, fontWeight: '700' },
 
@@ -272,8 +355,7 @@ const s = StyleSheet.create({
 
 const mq = StyleSheet.create({
   wrap:   { overflow: 'hidden', paddingVertical: 20, backgroundColor: Colors.backgroundDark },
-  track:  { flexDirection: 'row', paddingHorizontal: 16 },
-  card:   { backgroundColor: Colors.card, borderRadius: Theme.borderRadius.lg, padding: 18, marginRight: 16, borderWidth: 1, borderColor: Colors.cardBorder },
+  card:   { backgroundColor: Colors.card, borderRadius: Theme.borderRadius.lg, padding: 18, borderWidth: 1, borderColor: Colors.cardBorder },
   stars:  { flexDirection: 'row', gap: 3, marginBottom: 10 },
   starOn: { fontSize: 15, color: Colors.accent },
   starOff:{ fontSize: 15, color: Colors.cardBorder },

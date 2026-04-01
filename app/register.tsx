@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Pressable, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, ActivityIndicator, Alert, ScrollView, LayoutAnimation, UIManager, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +7,10 @@ import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 import { authAPI } from '../lib/api';
 import { useAuthStore } from '../store/useAuthStore';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -33,9 +37,7 @@ export default function RegisterScreen() {
       setLoading(true);
       const res = await authAPI.register({ name, email, password });
       
-      // Auto-login after successful registration
       await loginAction(res.data.user, res.data.token);
-      
       router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert(
@@ -43,6 +45,7 @@ export default function RegisterScreen() {
         err.response?.data?.message || 'Could not create account.'
       );
     } finally {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setLoading(false);
     }
   };
@@ -92,7 +95,17 @@ export default function RegisterScreen() {
             secureTextEntry={true}
           />
 
-          <Pressable style={styles.registerBtn} onPress={handleRegister} disabled={loading}>
+          <Pressable 
+            style={({ pressed }) => [
+              styles.registerBtn,
+              { 
+                opacity: pressed ? 0.8 : 1, 
+                transform: [{ scale: pressed ? 0.96 : 1 }] 
+              }
+            ]} 
+            onPress={handleRegister} 
+            disabled={loading}
+          >
             <LinearGradient colors={[Colors.primaryLight, Colors.primary]} style={styles.gradient}>
               {loading ? (
                 <ActivityIndicator color={Colors.white} />
@@ -106,7 +119,16 @@ export default function RegisterScreen() {
         <View style={styles.footer}>
           <Text style={styles.footerText}>Already have an account? </Text>
           <Link href="/login" asChild>
-            <Pressable><Text style={styles.link}>Log in</Text></Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                { 
+                  opacity: pressed ? 0.6 : 1, 
+                  transform: [{ scale: pressed ? 0.96 : 1 }] 
+                }
+              ]} 
+            >
+              <Text style={styles.link}>Log in</Text>
+            </Pressable>
           </Link>
         </View>
       </ScrollView>

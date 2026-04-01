@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, ActivityIndicator, Alert, LayoutAnimation, UIManager, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +7,11 @@ import { Colors } from '../constants/colors';
 import { Theme } from '../constants/theme';
 import { authAPI } from '../lib/api';
 import { useAuthStore } from '../store/useAuthStore';
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,10 +30,8 @@ export default function LoginScreen() {
       setLoading(true);
       const res = await authAPI.login({ email, password });
       console.log("BACKEND LOGIN RESPONSE:", JSON.stringify(res.data.user, null, 2));
-      // Save token and user to store
-      await loginAction(res.data.user, res.data.token);
       
-      // Redirect to home
+      await loginAction(res.data.user, res.data.token);
       router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert(
@@ -36,6 +39,7 @@ export default function LoginScreen() {
         err.response?.data?.message || 'Check your credentials and try again.'
       );
     } finally {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setLoading(false);
     }
   };
@@ -67,7 +71,17 @@ export default function LoginScreen() {
             secureTextEntry={true}
           />
 
-          <Pressable style={styles.loginBtn} onPress={handleLogin} disabled={loading}>
+          <Pressable 
+            style={({ pressed }) => [
+              styles.loginBtn,
+              { 
+                opacity: pressed ? 0.8 : 1, 
+                transform: [{ scale: pressed ? 0.96 : 1 }] 
+              }
+            ]} 
+            onPress={handleLogin}
+            disabled={loading}
+          >
             <LinearGradient colors={[Colors.primaryLight, Colors.primaryDark]} style={styles.gradient}>
               {loading ? (
                 <ActivityIndicator color={Colors.white} />
@@ -81,7 +95,16 @@ export default function LoginScreen() {
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
           <Link href="/register" asChild>
-            <Pressable><Text style={styles.link}>Create one</Text></Pressable>
+            <Pressable 
+              style={({ pressed }) => [
+                { 
+                  opacity: pressed ? 0.6 : 1, 
+                  transform: [{ scale: pressed ? 0.96 : 1 }] 
+                }
+              ]} 
+            >
+              <Text style={styles.link}>Create one</Text>
+            </Pressable>
           </Link>
         </View>
       </View>
