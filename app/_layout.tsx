@@ -1,3 +1,5 @@
+import * as NavigationBar from 'expo-navigation-bar';
+import { Platform } from 'react-native';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -13,6 +15,12 @@ export default function RootLayout() {
   const isLoading = useAuthStore((s) => s.isLoading);
 
   useEffect(() => {
+    // Hide Android Navigation Bar for fullscreen mode
+    if (Platform.OS === 'android') {
+      NavigationBar.setVisibilityAsync("hidden");
+      // This allows users to temporarily swipe up from the bottom if they ever need the buttons
+      NavigationBar.setBehaviorAsync("overlay-swipe"); 
+    }
     // Restore session from AsyncStorage on every app start
     checkAuth().finally(() => {
       SplashScreen.hideAsync();

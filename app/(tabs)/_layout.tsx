@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     height: Platform.OS === 'ios' ? 96 : 76,
     paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 6,
     ...{
       shadowColor: Colors.text,
       shadowOffset: { width: 0, height: -2 },
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 1,
   },
   tabIcon: {
     fontSize: 22,
@@ -128,14 +128,14 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 8,
     color: Colors.textMuted,
-    fontWeight: '500',
+    fontWeight: '800',
     letterSpacing: 0.3,
   },
   tabLabelFocused: {
     color: Colors.primary,
-    fontWeight: '700',
+    fontWeight: '900',
   },
   badge: {
     position: 'absolute',
