@@ -1,9 +1,6 @@
 import axios from 'axios';
 
-// Change this to your backend URL
-const BASE_URL = __DEV__
-  ? 'http://192.168.1.X:5000/api'
-  : 'https://serenity-gardens.onrender.com/api';
+const BASE_URL = 'https://serenity-gardens.onrender.com/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
