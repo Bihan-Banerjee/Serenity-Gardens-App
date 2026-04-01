@@ -76,20 +76,20 @@ export default function RegisterScreen() {
 
           <Text style={styles.label}>Password</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: Colors.text }]}
             placeholder="At least 6 characters"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={true}
           />
 
           <Text style={styles.label}>Confirm Password</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: Colors.text }]}
             placeholder="Re-enter password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            secureTextEntry
+            secureTextEntry={true}
           />
 
           <Pressable style={styles.registerBtn} onPress={handleRegister} disabled={loading}>

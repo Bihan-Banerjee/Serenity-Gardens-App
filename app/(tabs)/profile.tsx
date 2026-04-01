@@ -75,7 +75,7 @@ function OrderCard({ order }: { order: Order }) {
       <View style={styles.orderDivider} />
       <View style={styles.orderTotal}>
         <Text style={styles.orderTotalLabel}>Total</Text>
-        <Text style={styles.orderTotalAmount}>₹{(order.total || 0).toFixed(2)}</Text>
+        <Text style={styles.orderTotalAmount}>₹{(order.total || (order as any).totalAmount || 0).toFixed(2)}</Text>
       </View>
     </View>
   );
@@ -90,7 +90,12 @@ function AuthedProfile() {
   useEffect(() => {
     ordersAPI
       .getMyOrders()
-      .then((res) => setOrders(res.data))
+      .then((res) => {
+        const validOrders = res.data.filter(
+          (o: any) => o.paymentStatus === 'paid' || o.paymentMethod === 'cod'
+        );
+        setOrders(validOrders);
+      })
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
   }, []);
@@ -108,7 +113,7 @@ function AuthedProfile() {
     .join('')
     .toUpperCase()
     .slice(0, 2);
-
+  const router = useRouter();
   return (
     <ScrollView
       style={styles.scroll}
@@ -127,9 +132,12 @@ function AuthedProfile() {
         <Text style={styles.avatarName}>{user?.name}</Text>
         <Text style={styles.avatarEmail}>{user?.email}</Text>
         {user?.isAdmin && (
-          <View style={styles.adminBadge}>
-            <Text style={styles.adminBadgeText}>⚡ Admin</Text>
-          </View>
+          <Pressable 
+            style={styles.adminBadge} 
+            onPress={() => router.push('/admin')} // Routes to your admin folder
+          >
+            <Text style={styles.adminBadgeText}>⚡ Go to Admin Portal</Text>
+          </Pressable>
         )}
       </LinearGradient>
 
@@ -139,7 +147,7 @@ function AuthedProfile() {
           { label: 'Total Orders', value: orders.length },
           {
             label: 'Spent',
-            value: `₹${orders.reduce((s, o) => s + (o.total || 0), 0).toFixed(0)}`,
+            value: `₹${orders.reduce((s, o) => s + (o.total || (orders as any).totalAmount || 0), 0).toFixed(0)}`,
           },
           {
             label: 'Member Since',

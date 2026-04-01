@@ -194,7 +194,12 @@ export default function ExploreScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsContainer}
+        style={{ flexGrow: 0, maxHeight: 60, marginBottom: 10 }}
+        contentContainerStyle={{ 
+          gap: 12,               // Adds space BETWEEN tabs
+          paddingHorizontal: 16, // Adds space at the start and end of the list
+          alignItems: 'center'   // Centers them vertically
+        }}
       >
         {CATEGORIES.map((cat) => (
           <Pressable

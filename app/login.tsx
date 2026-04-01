@@ -60,11 +60,11 @@ export default function LoginScreen() {
 
           <Text style={styles.label}>Password</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: Colors.text }]}
             placeholder="Enter your password"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={true}
           />
 
           <Pressable style={styles.loginBtn} onPress={handleLogin} disabled={loading}>
