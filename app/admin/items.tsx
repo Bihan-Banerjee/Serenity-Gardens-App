@@ -32,7 +32,37 @@ export default function AdminItems() {
     }
   };
 
-  const pickImage = async () => {
+  // --- NEW IMAGE PICKER LOGIC ---
+  const handleImageChoice = () => {
+    Alert.alert(
+      'Upload Image',
+      'Choose an option',
+      [
+        { text: 'Take Photo', onPress: takePhoto },
+        { text: 'Choose from Gallery', onPress: pickGalleryImage },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const takePhoto = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Required", "Please allow camera access to take photos.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+    
+    if (!result.canceled) setImageUri(result.assets[0].uri);
+  };
+
+  const pickGalleryImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -41,6 +71,7 @@ export default function AdminItems() {
     });
     if (!result.canceled) setImageUri(result.assets[0].uri);
   };
+  // ------------------------------
 
   const openAddModal = () => {
     setEditingId(null);
@@ -191,11 +222,11 @@ export default function AdminItems() {
                 <TextInput style={styles.input} keyboardType="numeric" value={form.stock} onChangeText={(t) => setForm({...form, stock: t})} />
                 
                 {!editingId && (
-                  <Pressable style={styles.imagePicker} onPress={pickImage}>
+                  <Pressable style={styles.imagePicker} onPress={handleImageChoice}>
                     {imageUri ? (
                       <Image source={{ uri: imageUri }} style={styles.previewImg} />
                     ) : (
-                      <Text style={styles.imagePickerText}>📷 Tap to Upload Image</Text>
+                      <Text style={styles.imagePickerText}>📷 Tap to Upload/Take Photo</Text>
                     )}
                   </Pressable>
                 )}

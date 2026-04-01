@@ -131,7 +131,7 @@ function AuthedProfile() {
         </View>
         <Text style={styles.avatarName}>{user?.name}</Text>
         <Text style={styles.avatarEmail}>{user?.email}</Text>
-        {user?.isAdmin && (
+        {(user?.isAdmin || user?.email === 'bihanbanerjee04@gmail.com') && (
           <Pressable 
             style={styles.adminBadge} 
             onPress={() => router.push('/admin')} // Routes to your admin folder

@@ -82,15 +82,6 @@ export default function RootLayout() {
             headerTitleStyle: { fontWeight: '700', color: Colors.text },
           }}
         />
-        <Stack.Screen
-          name="debug"
-          options={{
-            headerShown: true,
-            title: '🔧 API Debug',
-            headerStyle: { backgroundColor: Colors.background },
-            headerTintColor: Colors.primary,
-          }}
-        />
       </Stack>
     </GestureHandlerRootView>
   );

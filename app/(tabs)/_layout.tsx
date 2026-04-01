@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
     borderTopColor: Colors.cardBorder,
     borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 68,
+    height: Platform.OS === 'ios' ? 96 : 76,
     paddingTop: 8,
     paddingBottom: Platform.OS === 'ios' ? 24 : 8,
     ...{

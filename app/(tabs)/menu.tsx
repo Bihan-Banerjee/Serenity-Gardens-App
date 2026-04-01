@@ -319,7 +319,7 @@ export default function MenuScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tabsContainer}
-        style={{ flexGrow: 0, minHeight: 50, maxHeight: 50 }}
+        style={{ flexGrow: 0, flexShrink: 0, minHeight: 55, maxHeight: 55 }}
       >
         {CATEGORIES.map((cat) => (
           <Pressable

@@ -24,7 +24,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const res = await authAPI.login({ email, password });
-      
+      console.log("BACKEND LOGIN RESPONSE:", JSON.stringify(res.data.user, null, 2));
       // Save token and user to store
       await loginAction(res.data.user, res.data.token);
       

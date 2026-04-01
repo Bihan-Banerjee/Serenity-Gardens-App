@@ -194,7 +194,7 @@ export default function ExploreScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0, maxHeight: 60, marginBottom: 10 }}
+        style={{ flexGrow: 0, flexShrink: 0, maxHeight: 60, marginBottom: 10 }}
         contentContainerStyle={{ 
           gap: 12,               // Adds space BETWEEN tabs
           paddingHorizontal: 16, // Adds space at the start and end of the list
