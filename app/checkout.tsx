@@ -156,7 +156,7 @@ export default function CheckoutScreen() {
         description: 'Serenity Gardens Order',
         image: 'https://yourwebsite.com/logo.jpg', // Replace with your hosted logo
         currency: 'INR',
-        key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your test/live key
+        key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID, // Replace with your test/live key
         amount: total * 100, // Amount in paise
         name: 'Serenity Gardens',
         order_id: orderRes.data.razorpayOrderId, // The ID from your backend

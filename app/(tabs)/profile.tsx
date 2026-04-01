@@ -68,14 +68,14 @@ function OrderCard({ order }: { order: Order }) {
             {item.quantity}× {item.name}
           </Text>
           <Text style={styles.orderItemPrice}>
-            ₹{(item.price * item.quantity).toFixed(0)}
+            ₹{((item.price || 0) * (item.quantity || 1)).toFixed(0)}
           </Text>
         </View>
       ))}
       <View style={styles.orderDivider} />
       <View style={styles.orderTotal}>
         <Text style={styles.orderTotalLabel}>Total</Text>
-        <Text style={styles.orderTotalAmount}>₹{order.total.toFixed(2)}</Text>
+        <Text style={styles.orderTotalAmount}>₹{(order.total || 0).toFixed(2)}</Text>
       </View>
     </View>
   );
@@ -139,7 +139,7 @@ function AuthedProfile() {
           { label: 'Total Orders', value: orders.length },
           {
             label: 'Spent',
-            value: `₹${orders.reduce((s, o) => s + o.total, 0).toFixed(0)}`,
+            value: `₹${orders.reduce((s, o) => s + (o.total || 0), 0).toFixed(0)}`,
           },
           {
             label: 'Member Since',
