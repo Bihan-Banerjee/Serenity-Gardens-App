@@ -34,19 +34,21 @@ interface TeamMember {
 
 // ── Data ──────────────────────────────────────────────────
 const MILESTONES: Milestone[] = [
-  { year: '2008', title: 'Founded', emoji: '🌱', desc: 'The garden started as a small backyard experiment.' },
-  { year: '2012', title: 'First Harvest', emoji: '🌾', desc: 'First commercial harvest of organic vegetables.' },
-  { year: '2016', title: 'Pisciculture', emoji: '🐟', desc: 'Fish farming added — rohu, catla and mrigal.' },
-  { year: '2019', title: 'Solar Panels', emoji: '☀️', desc: 'Went 80% solar. Zero chemical farming certified.' },
-  { year: '2022', title: 'Open to Visitors', emoji: '🚪', desc: 'Opened gates for guided tours and retreats.' },
-  { year: '2024', title: 'Online Store', emoji: '🛒', desc: 'Launched Serenity Gardens online for fresh delivery.' },
+  { year: '2021', title: 'Founded', emoji: '🌱', desc: 'The garden started as a small backyard experiment.' },
+  { year: '2022', title: 'First Harvest', emoji: '🌾', desc: 'First commercial harvest of organic vegetables.' },
+  { year: '2023', title: 'Pisciculture', emoji: '🐟', desc: 'Fish farming added — rohu, catla and mrigal.' },
+  { year: '2024', title: 'Solar Panels', emoji: '☀️', desc: 'Went 80% solar. Zero chemical farming certified.' },
+  { year: '2025', title: 'Open to Visitors', emoji: '🚪', desc: 'Opened gates for guided tours and retreats.' },
+  { year: '2026', title: 'Online Store', emoji: '🛒', desc: 'Launched Serenity Gardens online for fresh delivery.' },
 ];
 
 const TEAM: TeamMember[] = [
   { name: 'Baba', role: 'Founder & Head Farmer', emoji: '👨‍🌾', color: '#D4EDDA' },
   { name: 'Ma', role: 'Garden Curator', emoji: '👩‍🌾', color: '#FFF3CD' },
   { name: 'Jeja', role: 'Pisciculture Manager', emoji: '🎣', color: '#D1E8F7' },
-  { name: 'Jemma', role: 'Visitor Experience', emoji: '🌸', color: '#F8D7DA' },
+  { name: 'Jemma', role: 'Visitor Experience', emoji: '🌸', color: '#d8bcbe' },
+  { name: 'Gablu', role: 'Technical Lead', emoji: '💻', color: '#899dab' },
+  { name: 'Titi Didi', role: 'Medical Officer', emoji: '⚕️', color: '#F8D7DA' },
 ];
 
 const VALUES = [
@@ -62,8 +64,8 @@ function CompareSlider() {
   const panRef = useRef(new Animated.Value(0)).current;
 
   const SLIDER_W = W - 64;
-  const BEFORE_URI = 'https://images.unsplash.com/photo-1558449907-298b08698b43?w=600&q=75';
-  const AFTER_URI = 'https://images.unsplash.com/photo-1416879107082-7dd74f3d32f6?w=600&q=75';
+  const BEFORE_URI = 'https://res.cloudinary.com/drj7t97rd/image/upload/v1775056439/broken_rygkpq.png';
+  const AFTER_URI = 'https://res.cloudinary.com/drj7t97rd/image/upload/v1775056468/hero-garden6_d92wqb.jpg';
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -205,7 +207,7 @@ export default function AboutScreen() {
       {/* Hero Banner */}
       <View style={styles.heroBanner}>
         <Image
-          source={{ uri: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&q=80' }}
+          source={{ uri: 'https://res.cloudinary.com/drj7t97rd/image/upload/v1775056597/about-us_gg5bpi.jpg' }}
           style={StyleSheet.absoluteFillObject}
           resizeMode="cover"
         />
