@@ -20,10 +20,17 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
+// Called when a request made with a token comes back 401 (expired or invalid session).
+let onUnauthorized: (() => void) | null = null;
+export const setUnauthorizedHandler = (fn: () => void) => { onUnauthorized = fn; };
+
 // Response interceptor for global error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401 && api.defaults.headers.common['Authorization']) {
+      onUnauthorized?.();
+    }
     const message =
       error.response?.data?.message || error.message || 'Something went wrong';
     return Promise.reject(new Error(message));

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminOrdersAPI } from '../../lib/api';
 import { Alert } from '../../lib/dialog';
+import Icon from '../../components/Icon';
 import { Colors } from '../../lib/colors';
 
 export default function AdminOrders() {
@@ -56,7 +57,7 @@ export default function AdminOrders() {
 
   return (
     <div className="pad-x">
-      <h2 className="page-h">Order Management</h2>
+      <h2 className="page-h">Order management</h2>
       {loading ? (
         <div className="spinner" />
       ) : orders.length === 0 ? (
@@ -71,9 +72,9 @@ export default function AdminOrders() {
                   {o.paid ? 'PAID' : 'PENDING'}
                 </span>
               </div>
-              <div className="cust">👤 {o.userId?.name || 'Unknown User'}</div>
-              <div className="muted small">✉️ {o.userId?.email || 'No email'}</div>
-              {o.razorpayPaymentId && <div className="muted small">💳 TXN: {o.razorpayPaymentId}</div>}
+              <div className="cust">{o.userId?.name || 'Unknown user'}</div>
+              <div className="muted small">{o.userId?.email || 'No email'}</div>
+              {o.razorpayPaymentId && <div className="muted small">Txn: {o.razorpayPaymentId}</div>}
               <hr />
               <b className="small">Items ({o.items?.length}):</b>
               {o.items?.map((i: any, idx: number) => (
@@ -86,7 +87,7 @@ export default function AdminOrders() {
                   <button className="pill-btn" style={{ background: o.paid ? Colors.textMuted : Colors.primary }} onClick={() => togglePaymentStatus(o._id, o.paid)}>
                     Mark {o.paid ? 'Unpaid' : 'Paid'}
                   </button>
-                  <button className="pill-btn del" onClick={() => handleDelete(o._id)}>🗑️</button>
+                  <button className="pill-btn del" onClick={() => handleDelete(o._id)} aria-label="Delete order"><Icon name="trash" size={16} /></button>
                 </div>
               </div>
             </div>

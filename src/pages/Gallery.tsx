@@ -45,7 +45,7 @@ export default function Gallery() {
             <img src={selected.uri} alt={selected.label} />
             <div className="lightbox-caption">
               <h3>{selected.label}</h3>
-              <span>Tap anywhere to close</span>
+              <span>Tap to close</span>
             </div>
           </div>
         </div>

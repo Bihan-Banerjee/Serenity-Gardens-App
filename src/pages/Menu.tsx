@@ -5,6 +5,7 @@ import { itemsAPI } from '../lib/api';
 import { Alert } from '../lib/dialog';
 import { PLACEHOLDER_IMG } from '../lib/format';
 import { tap } from '../lib/native';
+import Icon from '../components/Icon';
 
 export interface Item {
   _id: string;
@@ -23,9 +24,9 @@ const CATEGORIES = ['All', 'Fish', 'Vegetables', 'Flowers'];
 function Qty({ value, onMinus, onPlus }: { value: number; onMinus: () => void; onPlus: () => void }) {
   return (
     <div className="qty">
-      <button className="qty-btn" onClick={onMinus}>−</button>
+      <button className="qty-btn" onClick={onMinus} aria-label="Decrease"><Icon name="minus" size={14} /></button>
       <span className="qty-num">{value}</span>
-      <button className="qty-btn" onClick={onPlus}>+</button>
+      <button className="qty-btn" onClick={onPlus} aria-label="Increase"><Icon name="plus" size={14} /></button>
     </div>
   );
 }
@@ -41,12 +42,12 @@ function CartSheet({ visible, onClose }: { visible: boolean; onClose: () => void
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-handle" />
         <div className="sheet-head">
-          <h3>Your Cart 🛒</h3>
-          <button className="icon-btn" onClick={onClose}>✕</button>
+          <h3>Your cart</h3>
+          <button className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="x" size={20} /></button>
         </div>
         {items.length === 0 ? (
           <div className="empty">
-            <div className="empty-emoji">🌿</div>
+            <Icon name="bag" size={44} className="empty-icon" />
             <strong>Your cart is empty</strong>
             <span className="muted">Add some fresh products!</span>
           </div>
@@ -71,7 +72,7 @@ function CartSheet({ visible, onClose }: { visible: boolean; onClose: () => void
             <div className="sheet-foot">
               <div className="total-row"><span>Total</span><b>₹{total.toFixed(2)}</b></div>
               <button className="btn btn-gradient" onClick={() => { onClose(); navigate('/checkout'); }}>
-                Proceed to Checkout →
+                Checkout <Icon name="arrow-right" size={18} />
               </button>
             </div>
           </>
@@ -128,7 +129,7 @@ function ProductCard({ item }: { item: Item }) {
               }}
             />
           ) : (
-            <button className="add-btn" disabled={outOfStock} onClick={handleAdd}>+ Add</button>
+            <button className="add-btn" disabled={outOfStock} onClick={handleAdd}><Icon name="plus" size={14} /> Add</button>
           )}
         </div>
       </div>
@@ -166,8 +167,8 @@ export default function Menu() {
           <h1>Our Shop</h1>
         </div>
         <button className="cart-btn" onClick={() => setCartVisible(true)} aria-label="Open cart">
-          🛒
-          {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+          <Icon name="bag" size={22} />
+          {totalItems > 0 && <span key={totalItems} className="cart-badge pop-in">{totalItems}</span>}
         </button>
       </header>
 
@@ -181,12 +182,12 @@ export default function Menu() {
 
       <div className="screen-scroll">
         {loading ? (
-          <div className="spinner" />
+          <div className="product-grid">{[0, 1, 2, 3].map((i) => <div key={i} className="product skeleton-card"><div className="skeleton" style={{ height: 130 }} /><div className="product-info"><div className="skeleton line" /><div className="skeleton line short" /></div></div>)}</div>
         ) : filtered.length === 0 ? (
           <p className="muted center pad">No items found in this category.</p>
         ) : (
           <div className="product-grid">
-            {filtered.map((item) => <ProductCard key={item._id} item={item} />)}
+            {filtered.map((item, i) => <div key={item._id} className="fade-up" style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}><ProductCard item={item} /></div>)}
           </div>
         )}
       </div>

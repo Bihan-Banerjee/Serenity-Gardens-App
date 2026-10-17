@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import Icon from "../components/Icon";
+import type { IconName } from "../components/Icon";
 import { ITEMS } from '../data/explore';
 import type { Category } from '../data/explore';
 
 const CATEGORIES: Category[] = ['All', 'Flora', 'Fauna', 'Ponds', 'Farm'];
-const CATEGORY_EMOJI: Record<Category, string> = {
-  All: '🌍', Flora: '🌱', Fauna: '🦋', Ponds: '💧', Farm: '🚜',
+const CATEGORY_ICON: Record<Category, IconName> = {
+  All: "compass", Flora: "sprout", Fauna: "bird", Ponds: "droplet", Farm: "tree",
 };
 
 export default function Explore() {
@@ -21,7 +23,7 @@ export default function Explore() {
       <div className="chips">
         {CATEGORIES.map((cat) => (
           <button key={cat} className={`chip ${active === cat ? 'on' : ''}`} onClick={() => setActive(cat)}>
-            <span>{CATEGORY_EMOJI[cat]}</span> {cat}
+            <Icon name={CATEGORY_ICON[cat]} size={16} /> {cat}
           </button>
         ))}
       </div>

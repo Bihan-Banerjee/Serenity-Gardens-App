@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { adminItemsAPI } from '../../lib/api';
 import { Alert } from '../../lib/dialog';
 import { Colors } from '../../lib/colors';
+import { pickPhoto } from '../../lib/photo';
+import Icon from '../../components/Icon';
 import { PLACEHOLDER_IMG } from '../../lib/format';
 
 const EMPTY_FORM = { name: '', price: '', stock: '', description: '' };
@@ -33,7 +35,8 @@ export default function AdminItems() {
   // Release the object URL whenever the preview changes or the screen unmounts.
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
-  const pickImage = (file: File | undefined) => {
+  const pickImage = async (source: 'camera' | 'gallery') => {
+    const file = await pickPhoto(source);
     if (!file) return;
     setImageFile(file);
     setPreview(URL.createObjectURL(file));
@@ -112,8 +115,8 @@ export default function AdminItems() {
   return (
     <div className="pad-x">
       <div className="row-between">
-        <h2 className="page-h">Manage Items</h2>
-        <button className="pill-btn" style={{ background: Colors.primary }} onClick={openAddModal}>+ Add New</button>
+        <h2 className="page-h">Manage items</h2>
+        <button className="pill-btn" style={{ background: Colors.primary }} onClick={openAddModal}><Icon name="plus" size={14} /> Add new</button>
       </div>
 
       {loading ? (
@@ -127,14 +130,14 @@ export default function AdminItems() {
                 <b className="ellipsis">{item.name}</b>
                 <div className="muted small">₹{item.price} | Stock: {item.stock}</div>
                 {item.finalized ? (
-                  <span className="fin-ok">✓ Finalized</span>
+                  <span className="fin-ok">Finalized</span>
                 ) : (
                   <button className="fin-btn" onClick={() => handleFinalize(item._id)}>Finalize</button>
                 )}
               </div>
               <div className="row-gap">
-                <button className="sq-btn" onClick={() => openEditModal(item)} aria-label="Edit">✏️</button>
-                <button className="sq-btn del" onClick={() => handleDelete(item._id)} aria-label="Delete">🗑️</button>
+                <button className="sq-btn" onClick={() => openEditModal(item)} aria-label="Edit"><Icon name="edit" size={18} /></button>
+                <button className="sq-btn del" onClick={() => handleDelete(item._id)} aria-label="Delete"><Icon name="trash" size={18} /></button>
               </div>
             </div>
           ))}
@@ -144,8 +147,8 @@ export default function AdminItems() {
       {modalVisible && (
         <div className="modal-page">
           <div className="modal-head">
-            <h3>{editingId ? 'Edit Stock/Price' : 'Add New Item'}</h3>
-            <button className="icon-btn" onClick={() => setModalVisible(false)}>✕</button>
+            <h3>{editingId ? 'Edit stock and price' : 'Add new item'}</h3>
+            <button className="icon-btn" onClick={() => setModalVisible(false)} aria-label="Close"><Icon name="x" size={20} /></button>
           </div>
           <div className="form modal-body">
             {!editingId && (
@@ -162,15 +165,20 @@ export default function AdminItems() {
             <input type="number" inputMode="numeric" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
 
             {!editingId && (
-              <label className="image-picker">
-                {preview ? <img src={preview} alt="Preview" /> : <span>📷 Tap to Upload/Take Photo</span>}
-                {/* Android's file chooser offers camera and gallery for image inputs */}
-                <input type="file" accept="image/*" hidden onChange={(e) => pickImage(e.target.files?.[0])} />
-              </label>
+              <>
+                <label>Photo</label>
+                <div className="photo-box">
+                  {preview ? <img src={preview} alt="Preview" /> : <span className="muted">No photo selected</span>}
+                </div>
+                <div className="photo-actions">
+                  <button type="button" className="btn btn-outline" onClick={() => pickImage('camera')}><Icon name="camera" size={18} /> Take photo</button>
+                  <button type="button" className="btn btn-outline" onClick={() => pickImage('gallery')}><Icon name="image" size={18} /> From gallery</button>
+                </div>
+              </>
             )}
 
             <button className="btn btn-gradient" onClick={handleSave} disabled={saving}>
-              {saving ? <span className="spinner small" /> : 'Save Item'}
+              {saving ? <span className="spinner small" /> : 'Save item'}
             </button>
           </div>
         </div>

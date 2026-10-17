@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
+import Icon from '../../components/Icon';
+import type { IconName } from '../../components/Icon';
 import { useAuthStore } from '../../store/useAuthStore';
 
-function AdminCard({ title, subtitle, emoji, onPress }: { title: string; subtitle: string; emoji: string; onPress: () => void }) {
+function AdminCard({ title, subtitle, icon, onPress }: { title: string; subtitle: string; icon: IconName; onPress: () => void }) {
   return (
     <button className="card admin-card" onClick={onPress}>
-      <span className="admin-emoji">{emoji}</span>
+      <span className="admin-icon"><Icon name={icon} size={24} /></span>
       <span className="grow"><b>{title}</b><small>{subtitle}</small></span>
-      <span className="arrow">→</span>
+      <Icon name="chevron-right" size={20} className="arrow" />
     </button>
   );
 }
@@ -17,14 +19,13 @@ export default function AdminDashboard() {
   return (
     <div className="pad-x">
       <div className="banner admin-banner">
-        <div className="big-emoji">🛡️</div>
-        <h2>Admin Portal</h2>
+        <h2>Admin portal</h2>
         <p>Welcome back, {user?.name}</p>
       </div>
       <div className="stack-gap">
-        <AdminCard title="Manage Items" subtitle="Add, edit, or remove store products" emoji="🌿" onPress={() => navigate('/admin/items')} />
-        <AdminCard title="Manage Orders" subtitle="View and update customer orders" emoji="📦" onPress={() => navigate('/admin/orders')} />
-        <AdminCard title="View Reviews" subtitle="Monitor customer feedback" emoji="⭐" onPress={() => navigate('/reviews')} />
+        <AdminCard title="Manage items" subtitle="Add, edit or remove store products" icon="leaf" onPress={() => navigate('/admin/items')} />
+        <AdminCard title="Manage orders" subtitle="View and update customer orders" icon="package" onPress={() => navigate('/admin/orders')} />
+        <AdminCard title="View reviews" subtitle="Monitor customer feedback" icon="star" onPress={() => navigate('/reviews')} />
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import { reviewsAPI } from '../lib/api';
 import { Alert } from '../lib/dialog';
 import { formatDate } from '../lib/format';
 import { useAuthStore } from '../store/useAuthStore';
+import Icon from '../components/Icon';
+import { SectionHead } from '../components/Motion';
 import { SEED } from '../data/reviews';
 import type { Review } from '../data/reviews';
 
@@ -113,8 +115,7 @@ export default function Reviews() {
   return (
     <div>
       <div className="banner">
-        <div className="big-emoji">⭐</div>
-        <h2>Guest Reviews</h2>
+        <h2>Guest reviews</h2>
         <p>What visitors say about Serenity Gardens</p>
         <div className="banner-stats">
           {[
@@ -130,33 +131,31 @@ export default function Reviews() {
       <Marquee reviews={reviews} />
 
       <section className="pad-x">
-        <div className="eyebrow">Share Your Experience</div>
-        <h3 className="section-title">Leave a Review</h3>
+        <SectionHead eyebrow="Share your experience" title="Leave a review" />
         {submitted ? (
           <div className="card center success-box">
-            <div className="big-emoji">🙏</div>
+            <Icon name="check" size={40} className="empty-icon" />
             <h3>Thank you!</h3>
             <p className="muted">Your review was submitted successfully.</p>
-            <button className="link-btn" onClick={() => setSubmitted(false)}>Write another →</button>
+            <button className="link-btn" onClick={() => setSubmitted(false)}>Write another</button>
           </div>
         ) : (
           <div className="card form">
-            <label>Your Name</label>
+            <label>Your name</label>
             <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
             <label>Rating</label>
             <StarPicker value={rating} onChange={setRating} />
-            <label>Your Review</label>
+            <label>Your review</label>
             <textarea rows={5} placeholder="Tell us about your visit or order..." value={message} onChange={(e) => setMessage(e.target.value)} />
             <button className="btn btn-gradient" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? <span className="spinner small" /> : 'Submit Review'}
+              {submitting ? <span className="spinner small" /> : 'Submit review'}
             </button>
           </div>
         )}
       </section>
 
       <section className="pad-x">
-        <div className="eyebrow">What People Say</div>
-        <h3 className="section-title">All Reviews</h3>
+        <SectionHead eyebrow="What people say" title="All reviews" />
         {reviews.map((r, i) => <ReviewCard key={r._id ?? i} r={r} idx={i} />)}
       </section>
       <div style={{ height: 32 }} />
