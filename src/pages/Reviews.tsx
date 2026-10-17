@@ -5,6 +5,7 @@ import { formatDate } from '../lib/format';
 import { useAuthStore } from '../store/useAuthStore';
 import Icon from '../components/Icon';
 import { SectionHead } from '../components/Motion';
+import { readCache, writeCache } from '../lib/cache';
 import { SEED } from '../data/reviews';
 import type { Review } from '../data/reviews';
 
@@ -77,7 +78,7 @@ function ReviewCard({ r, idx }: { r: Review; idx: number }) {
 
 export default function Reviews() {
   const user = useAuthStore((s) => s.user);
-  const [reviews, setReviews] = useState<Review[]>(SEED);
+  const [reviews, setReviews] = useState<Review[]>(() => { const c = readCache<Review[]>('reviews'); return c?.length ? [...c, ...SEED] : SEED; });
   const [name, setName] = useState(user?.name || '');
   const [message, setMessage] = useState('');
   const [rating, setRating] = useState(5);
@@ -87,8 +88,13 @@ export default function Reviews() {
   const fetchReviews = useCallback(() => {
     reviewsAPI
       .getAll()
-      .then((res) => setReviews(res.data?.length ? [...res.data, ...SEED] : SEED))
-      .catch(() => setReviews(SEED));
+      .then((res) => {
+        if (res.data?.length) {
+          writeCache('reviews', res.data);
+          setReviews([...res.data, ...SEED]);
+        }
+      })
+      .catch(() => { /* keep whatever is already showing */ });
   }, []);
 
   useEffect(fetchReviews, [fetchReviews]);

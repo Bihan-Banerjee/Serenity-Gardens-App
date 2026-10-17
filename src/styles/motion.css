@@ -39,11 +39,6 @@
 .hero { overflow: hidden; }
 .hero-slide { transform: scale(1.08); transition: transform 6s ease-out; }
 .hero-slide.current { transform: scale(1); }
-.hero-leaves { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.hero-leaves .leaf { fill: rgba(232, 201, 107, .55); animation: drift 9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-.hero-leaves .l2 { animation-duration: 12s; animation-delay: -4s; fill: rgba(197, 217, 191, .5); }
-.hero-leaves .l3 { animation-duration: 10s; animation-delay: -7s; }
-@keyframes drift { 0%, 100% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(14px, 26px) rotate(25deg); } }
 .hero-wave { position: absolute; left: 0; bottom: -1px; width: 200%; height: 46px; pointer-events: none; animation: wave 14s linear infinite; }
 .hero-wave .wave { fill: var(--bg); }
 .hero-wave .w1 { opacity: .55; }

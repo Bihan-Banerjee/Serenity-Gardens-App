@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { itemsAPI } from '../lib/api';
 import { Alert } from '../lib/dialog';
 import { PLACEHOLDER_IMG } from '../lib/format';
 import { tap } from '../lib/native';
+import { readCache, writeCache } from '../lib/cache';
+import { SlowNote } from '../components/Loading';
 import Icon from '../components/Icon';
 
 export interface Item {
@@ -37,8 +40,9 @@ function CartSheet({ visible, onClose }: { visible: boolean; onClose: () => void
   const total = useCartStore((s) => s.totalPrice());
   const navigate = useNavigate();
 
-  return (
-    <div className={`sheet-overlay ${visible ? 'open' : ''}`} onClick={onClose}>
+  // Rendered into <body> so no transformed ancestor can trap it underneath the tab bar.
+  return createPortal(
+    <div className={`sheet-overlay ${visible ? 'open' : ''}`} onClick={onClose} aria-hidden={!visible}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-handle" />
         <div className="sheet-head">
@@ -79,7 +83,7 @@ function CartSheet({ visible, onClose }: { visible: boolean; onClose: () => void
         )}
       </div>
     </div>
-  );
+  , document.body);
 }
 
 function ProductCard({ item }: { item: Item }) {
@@ -139,8 +143,9 @@ function ProductCard({ item }: { item: Item }) {
 
 export default function Menu() {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = readCache<Item[]>('items');
+  const [items, setItems] = useState<Item[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached);
   const [cartVisible, setCartVisible] = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
 
@@ -148,7 +153,10 @@ export default function Menu() {
     (async () => {
       try {
         const res = await itemsAPI.getAll();
-        if (res.data?.length) setItems(res.data);
+        if (res.data?.length) {
+          setItems(res.data);
+          writeCache('items', res.data);
+        }
       } catch {
         Alert.alert('Error', 'Could not load store items. Check your internet connection.');
       } finally {
@@ -182,7 +190,17 @@ export default function Menu() {
 
       <div className="screen-scroll">
         {loading ? (
-          <div className="product-grid">{[0, 1, 2, 3].map((i) => <div key={i} className="product skeleton-card"><div className="skeleton" style={{ height: 130 }} /><div className="product-info"><div className="skeleton line" /><div className="skeleton line short" /></div></div>)}</div>
+          <>
+            <SlowNote />
+            <div className="product-grid">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="product skeleton-card">
+                  <div className="skeleton" style={{ height: 130 }} />
+                  <div className="product-info"><div className="skeleton line" /><div className="skeleton line short" /></div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : filtered.length === 0 ? (
           <p className="muted center pad">No items found in this category.</p>
         ) : (

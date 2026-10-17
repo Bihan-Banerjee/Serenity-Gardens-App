@@ -1,0 +1,16 @@
+# Pings the Render backend so it rarely goes to sleep (free tier sleeps after ~15 min idle).
+# Works once this repo is pushed to GitHub. GitHub cron is best-effort, so an external
+# monitor (UptimeRobot, cron-job.org) hitting the same URL every 10 minutes is more reliable.
+name: keep-backend-awake
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API
+        run: curl --silent --show-error --max-time 90 --retry 2 --output /dev/null --write-out "HTTP %{http_code} in %{time_total}s\n" https://serenity-gardens.onrender.com/api/items

@@ -27,9 +27,9 @@ const MARQUEE_ITEMS = [
 ];
 
 const STATS = [
-  { to: 12, suffix: '', label: 'Acres of land' },
-  { to: 100, suffix: '+', label: 'Tree species' },
-  { to: 30, suffix: '+', label: 'Bird species' },
+  { to: 5, suffix: '+', label: 'Fish species' },
+  { to: 50, suffix: '+', label: 'Tree species' },
+  { to: 15, suffix: '+', label: 'Bird species' },
 ];
 
 function HeroCarousel() {
@@ -59,12 +59,6 @@ function HeroCarousel() {
           </div>
         ))}
       </div>
-
-      <svg className="hero-leaves" viewBox="0 0 400 300" aria-hidden="true">
-        <path className="leaf l1" d="M60 40c12-14 30-14 38-4-8 14-26 18-38 4z" />
-        <path className="leaf l2" d="M320 90c10-12 26-12 34-3-7 12-23 15-34 3z" />
-        <path className="leaf l3" d="M200 20c8-10 22-10 28-2-6 10-19 12-28 2z" />
-      </svg>
 
       <div className="hero-text fade-up">
         <div className="hero-title">Serenity</div>

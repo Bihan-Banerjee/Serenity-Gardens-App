@@ -7,6 +7,8 @@ import { formatDate } from '../lib/format';
 import { Colors } from '../lib/colors';
 import { pickPhoto, toAvatarDataUrl } from '../lib/photo';
 import Icon from '../components/Icon';
+import { Loader } from '../components/Loading';
+import { readCache, writeCache } from '../lib/cache';
 
 interface Order {
   _id: string;
@@ -77,8 +79,10 @@ export function Avatar({ name, src, size = 72 }: { name?: string; src?: string; 
 }
 
 function OrderHistory() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const email = useAuthStore((s) => s.user?.email) || '';
+  const cached = readCache<Order[]>(`orders:${email}`);
+  const [orders, setOrders] = useState<Order[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached);
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [sort, setSort] = useState<SortKey>('newest');
 
@@ -86,10 +90,14 @@ function OrderHistory() {
     ordersAPI
       .getMyOrders()
       // Show only orders that were paid, or placed as cash on delivery. Abandoned online payments stay hidden.
-      .then((res) => setOrders(res.data.filter((o: Order) => o.paymentStatus === 'paid' || o.paymentMethod === 'cod')))
-      .catch(() => setOrders([]))
+      .then((res) => {
+        const valid = res.data.filter((o: Order) => o.paymentStatus === 'paid' || o.paymentMethod === 'cod');
+        setOrders(valid);
+        writeCache(`orders:${email}`, valid);
+      })
+      .catch(() => { if (!cached) setOrders([]); })
       .finally(() => setLoading(false));
-  }, []);
+  }, [email]);
 
   const visible = useMemo(() => {
     const list = orders.filter((o) => filter === 'all' || (filter === 'paid' ? o.paymentStatus === 'paid' : o.paymentStatus !== 'paid'));
@@ -138,7 +146,7 @@ function OrderHistory() {
         </div>
 
         {loading ? (
-          <div className="spinner" />
+          <Loader label="Loading your orders" />
         ) : visible.length === 0 ? (
           <div className="empty">
             <Icon name="package" size={40} className="empty-icon" />
@@ -220,7 +228,7 @@ function AuthedProfile() {
         <p>{user.email}</p>
         {user.isAdmin && (
           <button className="admin-badge" onClick={() => navigate('/admin')}>
-            <Icon name="shield" size={14} /> Admin portal
+            Admin portal
           </button>
         )}
       </div>

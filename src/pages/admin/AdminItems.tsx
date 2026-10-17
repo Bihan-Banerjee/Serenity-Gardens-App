@@ -4,6 +4,7 @@ import { Alert } from '../../lib/dialog';
 import { Colors } from '../../lib/colors';
 import { pickPhoto } from '../../lib/photo';
 import Icon from '../../components/Icon';
+import { Loader } from '../../components/Loading';
 import { PLACEHOLDER_IMG } from '../../lib/format';
 
 const EMPTY_FORM = { name: '', price: '', stock: '', description: '' };
@@ -120,7 +121,7 @@ export default function AdminItems() {
       </div>
 
       {loading ? (
-        <div className="spinner" />
+        <Loader label="Loading items" />
       ) : (
         <div className="stack-gap">
           {items.map((item) => (
