@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Artwork stays inside the central ~66% so adaptive-icon masks never clip it -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(512 512) scale(1.12) translate(-512 -586)">
+    <g transform="rotate(28 512 560)">
+      <path d="M512 720C382 640 362 440 512 290c150 150 130 350 0 430z" fill="#F2EDE4" stroke="none"/>
+      <path d="M512 735V380" stroke="#2A5C2E" stroke-width="18"/>
+      <path d="M512 620L452 566M512 620L572 566M512 530L462 484M512 530L562 484" stroke="#2A5C2E" stroke-width="14"/>
+      <path d="M512 720V790" stroke="#E8C96B" stroke-width="24"/>
+    </g>
+    <path d="M318 800C440 850 584 850 706 800" stroke="#E8C96B" stroke-width="22"/>
+  </g>
+</svg>
