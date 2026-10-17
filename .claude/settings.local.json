@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -v '^$')",
+      "Bash(grep -v '^\\\\s*$')",
+      "Bash(awk '/StyleSheet.create/{skip=1} /^}\\\\\\);/{skip=0; next} !skip')",
+      "Bash(npx tsc *)",
+      "Bash(npx vite *)",
+      "Bash(./node_modules/.bin/tsc --noEmit -p .)",
+      "Bash(echo \"tsc exit=$?\")",
+      "Bash(./node_modules/.bin/tsc -v)"
+    ]
+  }
+}
