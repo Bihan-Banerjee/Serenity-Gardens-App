@@ -22,7 +22,6 @@ export interface Item {
   unit?: string;
 }
 
-const CATEGORIES = ['All', 'Fish', 'Vegetables', 'Flowers'];
 
 function Qty({ value, onMinus, onPlus }: { value: number; onMinus: () => void; onPlus: () => void }) {
   return (
@@ -165,6 +164,8 @@ export default function Menu() {
     })();
   }, []);
 
+  // The backend does not store categories yet, so chips only appear once items carry one.
+  const categories = ['All', ...Array.from(new Set(items.map((i) => i.category).filter((c): c is string => !!c)))];
   const filtered = activeCategory === 'All' ? items : items.filter((i) => i.category === activeCategory);
 
   return (
@@ -180,13 +181,13 @@ export default function Menu() {
         </button>
       </header>
 
-      <div className="chips">
-        {CATEGORIES.map((cat) => (
+      {categories.length > 1 && <div className="chips">
+        {categories.map((cat) => (
           <button key={cat} className={`chip ${activeCategory === cat ? 'on' : ''}`} onClick={() => setActiveCategory(cat)}>
             {cat}
           </button>
         ))}
-      </div>
+      </div>}
 
       <div className="screen-scroll">
         {loading ? (

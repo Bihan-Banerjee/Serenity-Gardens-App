@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { reviewsAPI } from '../lib/api';
 import { Alert } from '../lib/dialog';
 import { formatDate } from '../lib/format';
@@ -78,6 +79,8 @@ function ReviewCard({ r, idx }: { r: Review; idx: number }) {
 
 export default function Reviews() {
   const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>(() => { const c = readCache<Review[]>('reviews'); return c?.length ? [...c, ...SEED] : SEED; });
   const [name, setName] = useState(user?.name || '');
   const [message, setMessage] = useState('');
@@ -138,7 +141,13 @@ export default function Reviews() {
 
       <section className="pad-x">
         <SectionHead eyebrow="Share your experience" title="Leave a review" />
-        {submitted ? (
+        {!isAuthenticated ? (
+          <div className="card center success-box">
+            <h3>Sign in to leave a review</h3>
+            <p className="muted">Reviews are linked to an account so each guest can post as themselves.</p>
+            <button className="btn btn-gradient" style={{ marginTop: 16 }} onClick={() => navigate('/login', { state: { from: '/reviews' } })}>Sign in</button>
+          </div>
+        ) : submitted ? (
           <div className="card center success-box">
             <Icon name="check" size={40} className="empty-icon" />
             <h3>Thank you!</h3>

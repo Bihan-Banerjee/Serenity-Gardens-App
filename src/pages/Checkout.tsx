@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -16,8 +16,7 @@ declare global {
 
 const PAYMENT_METHODS: { id: string; label: string; icon: IconName; desc: string }[] = [
   { id: 'cod', label: 'Cash on delivery', icon: 'cash', desc: 'Pay when you receive' },
-  { id: 'upi', label: 'UPI', icon: 'mobile', desc: 'GPay, PhonePe, Paytm' },
-  { id: 'razorpay', label: 'Card / net banking', icon: 'card', desc: 'Secure payment via Razorpay' },
+  { id: 'online', label: 'Pay online', icon: 'card', desc: 'UPI, cards and net banking via Razorpay' },
 ];
 
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined;
@@ -54,6 +53,7 @@ export default function Checkout() {
   const [address, setAddress] = useState(user?.address || '');
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const formRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [ordered, setOrdered] = useState(false);
 
@@ -62,22 +62,22 @@ export default function Checkout() {
   }, [items, ordered, navigate]);
 
   const subtotal = totalPrice;
-  const delivery = subtotal > 500 ? 0 : 40;
-  const total = subtotal + delivery;
+  // The server prices the order from its own item prices; there is no delivery fee on the backend.
+  const total = subtotal;
 
-  const finishOrderSuccess = () => {
-    updateProfile({ phone, address: address.trim() }); // remembered for next time
+  const finishOrderSuccess = (savedPhone: string, savedAddress: string) => {
+    updateProfile({ phone: savedPhone, address: savedAddress }); // remembered for next time
     setOrdered(true);
     clearCart();
   };
 
-  const openRazorpay = (razorpayOrderId: string) =>
+  const openRazorpay = (razorpayOrderId: string, amountPaise: number) =>
     new Promise<{ razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }>((resolve, reject) => {
       if (!window.Razorpay) return reject(new Error('Payment gateway failed to load. Check your connection.'));
       if (!RAZORPAY_KEY) return reject(new Error('Payment key is not configured.'));
       const rzp = new window.Razorpay({
         key: RAZORPAY_KEY,
-        amount: Math.round(total * 100), // paise
+        amount: amountPaise, // paise, as issued by the server
         currency: 'INR',
         name: 'Serenity Gardens',
         description: 'Serenity Gardens order',
@@ -97,37 +97,55 @@ export default function Checkout() {
       Alert.alert('Sign in required', 'Please sign in to place an order.');
       return;
     }
-    if (!name.trim()) return Alert.alert('Missing details', 'Please enter your name.');
-    if (phone.length !== 10) return Alert.alert('Invalid phone', 'Enter a valid 10-digit phone number.');
-    if (address.trim().length < 10) return Alert.alert('Missing details', 'Please enter your full delivery address.');
+    // Read what is actually in the fields, so a keyboard or autofill quirk can never leave stale state behind.
+    const el = (n: string) => formRef.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${n}"]`)?.value ?? '';
+    const fName = el('name').trim() || name.trim();
+    const fPhone = (el('phone') || phone).replace(/D/g, '');
+    const fAddress = (el('address') || address).trim();
+    const fNotes = el('notes') || notes;
+
+    if (!fName) return Alert.alert('Missing details', 'Please enter your name.');
+    if (fPhone.length !== 10) return Alert.alert('Invalid phone', 'Enter a valid 10-digit phone number.');
+    if (fAddress.length < 6) {
+      return Alert.alert('Address needed', 'Please enter where the order should be delivered (house or street, area and city).');
+    }
+
+    // Item ids and quantities only: the server looks up the real prices and checks stock.
+    // Delivery details are sent alongside for when the backend starts storing them.
+    const payload = {
+      items: items.map((i) => ({ id: i._id, quantity: i.quantity })),
+      paymentMethod,
+      deliveryAddress: { name: fName, email: user.email, phone: fPhone, address: fAddress, notes: fNotes },
+    };
 
     try {
       setLoading(true);
-      // 1. Create the order on the backend (returns a Razorpay order id for online payments)
-      const orderRes = await ordersAPI.create({
-        items: items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price, itemId: i._id })),
-        total,
-        paymentMethod,
-        deliveryAddress: { name: name.trim(), email: user.email, phone, address: address.trim(), notes },
-      });
 
       if (paymentMethod === 'cod') {
-        finishOrderSuccess();
+        await ordersAPI.create(payload);
+        finishOrderSuccess(fPhone, fAddress);
         return;
       }
 
-      // 2. Collect payment via Razorpay Checkout
+      // Online: the server creates the Razorpay order; the real order is only stored once the payment verifies.
+      const { data: rzpOrder } = await ordersAPI.createRazorpayOrder(payload);
+      if (!rzpOrder?.id) throw new Error('Could not start the payment. Please try again.');
+
       let payment;
       try {
-        payment = await openRazorpay(orderRes.data.razorpayOrderId);
+        payment = await openRazorpay(rzpOrder.id, rzpOrder.amount);
       } catch {
-        Alert.alert('Payment not completed', 'Your payment was cancelled or failed. You have not been charged.');
+        Alert.alert('Payment not completed', 'Your payment was cancelled or failed. You have not been charged and no order was placed.');
         return;
       }
 
-      // 3. Verify the signature on the backend
-      await ordersAPI.verifyPayment(payment);
-      finishOrderSuccess();
+      try {
+        await ordersAPI.verifyPayment(payment);
+      } catch {
+        Alert.alert('Payment received', 'We could not confirm your order automatically. Please contact us with your payment ID: ' + payment.razorpay_payment_id);
+        return;
+      }
+      finishOrderSuccess(fPhone, fAddress);
     } catch (err: any) {
       Alert.alert('Checkout error', err.message || 'Something went wrong.');
     } finally {
@@ -166,27 +184,22 @@ export default function Checkout() {
         ))}
         <hr />
         <div className="row-between order-line"><span className="muted">Subtotal</span><b>₹{subtotal.toFixed(2)}</b></div>
-        <div className="row-between order-line">
-          <span className="muted">Delivery</span>
-          <b style={delivery === 0 ? { color: Colors.success } : undefined}>{delivery === 0 ? 'Free' : `₹${delivery}`}</b>
-        </div>
-        {delivery > 0 && <div className="hint muted">Free delivery on orders above ₹500</div>}
         <hr />
         <div className="row-between"><span className="total-label">Total</span><span className="order-total">₹{total.toFixed(2)}</span></div>
       </div>
 
       <h3 className="section-h">Delivery details</h3>
-      <div className="card form">
+      <div className="card form" ref={formRef}>
         <label>Account email</label>
         <input value={user?.email || ''} readOnly className="readonly" />
         <label>Full name</label>
-        <input placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+        <input name="name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
         <label>Phone number</label>
-        <input type="tel" inputMode="numeric" maxLength={10} placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} />
+        <input name="phone" type="tel" inputMode="numeric" maxLength={10} placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} />
         <label>Delivery address</label>
-        <textarea rows={3} placeholder="House no., street, city, PIN" value={address} onChange={(e) => setAddress(e.target.value)} />
+        <textarea name="address" rows={3} placeholder="House no., street, city, PIN" value={address} onChange={(e) => setAddress(e.target.value)} />
         <label>Order notes (optional)</label>
-        <textarea rows={2} placeholder="Any special instructions" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <textarea name="notes" rows={2} placeholder="Any special instructions" value={notes} onChange={(e) => setNotes(e.target.value)} />
         <p className="muted small" style={{ marginTop: 10 }}>Your phone and address are saved to your account for next time.</p>
       </div>
 

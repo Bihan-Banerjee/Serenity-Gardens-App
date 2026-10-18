@@ -52,13 +52,16 @@ export const itemsAPI = {
 
 // ── Orders ────────────────────────────────────────────────
 export const ordersAPI = {
+  // Cash on delivery: the server prices the items itself and stores an unpaid order.
   create: (orderData: object) => api.post('/orders', orderData),
+  // Online payment: creates a Razorpay order and a server-side pending order; nothing is stored as an order until payment verifies.
+  createRazorpayOrder: (orderData: object) => api.post('/orders/create-razorpay-order', orderData),
   getMyOrders: () => api.get('/orders/my'),
-  verifyPayment: (paymentData: { 
-    razorpay_payment_id: string; 
-    razorpay_order_id: string; 
-    razorpay_signature: string 
-  }) => api.post('/orders/verify', paymentData),
+  verifyPayment: (paymentData: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => api.post('/orders/verify-payment', paymentData),
 };
 
 // ── Reviews ───────────────────────────────────────────────

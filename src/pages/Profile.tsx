@@ -14,11 +14,9 @@ interface Order {
   _id: string;
   createdAt: string;
   items: { name: string; quantity: number; price: number }[];
-  total?: number;
   totalAmount?: number;
-  paymentStatus: 'pending' | 'paid' | 'failed';
-  paymentMethod?: string;
-  status: string;
+  paid: boolean;
+  razorpayPaymentId?: string; // present only for orders paid online
 }
 
 const STATUS_CONFIG = {
@@ -37,10 +35,10 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: 'low', label: 'Amount: low to high' },
 ];
 
-const orderTotal = (o: Order) => o.total || o.totalAmount || 0;
+const orderTotal = (o: Order) => o.totalAmount || 0;
 
 function OrderCard({ order }: { order: Order }) {
-  const status = STATUS_CONFIG[order.paymentStatus] || STATUS_CONFIG.pending;
+  const status = order.paid ? STATUS_CONFIG.paid : STATUS_CONFIG.pending;
   return (
     <div className="card order-card">
       <div className="row-between">
@@ -48,7 +46,7 @@ function OrderCard({ order }: { order: Order }) {
           <div className="order-id">#{order._id.slice(-6).toUpperCase()}</div>
           <div className="muted small">
             {formatDate(order.createdAt)}
-            {order.paymentMethod ? ` · ${order.paymentMethod.toUpperCase()}` : ''}
+            {order.razorpayPaymentId ? ' · Online' : ' · Cash on delivery'}
           </div>
         </div>
         <span className="status-badge" style={{ background: status.color + '22', color: status.color }}>{status.label}</span>
@@ -89,18 +87,17 @@ function OrderHistory() {
   useEffect(() => {
     ordersAPI
       .getMyOrders()
-      // Show only orders that were paid, or placed as cash on delivery. Abandoned online payments stay hidden.
       .then((res) => {
-        const valid = res.data.filter((o: Order) => o.paymentStatus === 'paid' || o.paymentMethod === 'cod');
-        setOrders(valid);
-        writeCache(`orders:${email}`, valid);
+        // The backend only stores an order once it is placed (cash on delivery) or its online payment verified.
+        setOrders(res.data);
+        writeCache(`orders:${email}`, res.data);
       })
       .catch(() => { if (!cached) setOrders([]); })
       .finally(() => setLoading(false));
   }, [email]);
 
   const visible = useMemo(() => {
-    const list = orders.filter((o) => filter === 'all' || (filter === 'paid' ? o.paymentStatus === 'paid' : o.paymentStatus !== 'paid'));
+    const list = orders.filter((o) => filter === 'all' || (filter === 'paid' ? o.paid : !o.paid));
     const by: Record<SortKey, (a: Order, b: Order) => number> = {
       newest: (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
       oldest: (a, b) => +new Date(a.createdAt) - +new Date(b.createdAt),
@@ -118,7 +115,7 @@ function OrderHistory() {
         {[
           { label: 'Orders', value: orders.length },
           { label: 'Spent', value: `₹${spent.toFixed(0)}` },
-          { label: 'Paid', value: orders.filter((o) => o.paymentStatus === 'paid').length },
+          { label: 'Paid', value: orders.filter((o) => o.paid).length },
         ].map((stat) => (
           <div key={stat.label} className="card stat">
             <b>{stat.value}</b>

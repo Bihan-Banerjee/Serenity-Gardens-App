@@ -23,7 +23,7 @@ export default function Register() {
     if (!name.trim() || !email.trim() || !password) return Alert.alert('Error', 'Please fill in all required fields.');
     if (phone && phone.length !== 10) return Alert.alert('Error', 'Enter a valid 10-digit phone number.');
     if (password !== confirmPassword) return Alert.alert('Error', 'Passwords do not match.');
-    if (password.length < 6) return Alert.alert('Error', 'Password must be at least 6 characters.');
+    if (password.length < 8) return Alert.alert('Error', 'Password must be at least 8 characters.');
 
     try {
       setLoading(true);
@@ -53,7 +53,7 @@ export default function Register() {
         <label>Delivery address</label>
         <textarea rows={3} placeholder="House no., street, city, PIN" value={address} onChange={(e) => setAddress(e.target.value)} />
         <label>Password</label>
-        <input type="password" placeholder="At least 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input type="password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} />
         <label>Confirm password</label>
         <input type="password" placeholder="Re-enter password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
         <button className="btn btn-gradient" type="submit" disabled={loading}>
