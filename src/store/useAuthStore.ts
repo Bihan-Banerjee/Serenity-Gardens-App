@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { setAuthToken, setUnauthorizedHandler } from '../lib/api';
+import { authAPI, setAuthToken, setUnauthorizedHandler } from '../lib/api';
 
 export interface User {
   _id?: string;
@@ -25,6 +25,8 @@ interface AuthState {
   logout: () => void;
   checkAuth: () => void;
   updateProfile: (patch: Extras) => void;
+  // Saves phone/address locally and on the server. Resolves false if the server could not be reached.
+  saveDetails: (details: { phone: string; address: string }) => Promise<boolean>;
 }
 
 const read = (key: string) => {
@@ -87,6 +89,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     write('user', JSON.stringify(next));
     write(extrasKey(user.email), JSON.stringify({ phone: next.phone, address: next.address, avatar: next.avatar }));
     set({ user: next });
+  },
+
+  saveDetails: async ({ phone, address }) => {
+    get().updateProfile({ phone, address }); // local copy first, so it is never lost
+    try {
+      await authAPI.updateMe({ phone, address });
+      return true;
+    } catch {
+      return false;
+    }
   },
 }));
 

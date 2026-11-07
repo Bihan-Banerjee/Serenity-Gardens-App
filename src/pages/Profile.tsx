@@ -162,15 +162,21 @@ function OrderHistory() {
 
 function DetailsCard() {
   const user = useAuthStore((s) => s.user)!;
-  const updateProfile = useAuthStore((s) => s.updateProfile);
+  const saveDetails = useAuthStore((s) => s.saveDetails);
   const [phone, setPhone] = useState(user.phone || '');
   const [address, setAddress] = useState(user.address || '');
+  const [saving, setSaving] = useState(false);
   const dirty = phone !== (user.phone || '') || address !== (user.address || '');
 
-  const save = () => {
+  const save = async () => {
     if (phone && phone.length !== 10) return Alert.alert('Invalid phone', 'Enter a valid 10-digit phone number.');
-    updateProfile({ phone, address: address.trim() });
-    Alert.alert('Saved', 'Your details will be used at checkout.');
+    setSaving(true);
+    const synced = await saveDetails({ phone, address: address.trim() });
+    setSaving(false);
+    Alert.alert(
+      'Saved',
+      synced ? 'Your details are saved to your account and will be used at checkout.' : 'Saved on this device. We could not reach the server, so they are not on your account yet.',
+    );
   };
 
   return (
@@ -179,7 +185,7 @@ function DetailsCard() {
       <input type="tel" inputMode="numeric" maxLength={10} placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} />
       <label>Delivery address</label>
       <textarea rows={3} placeholder="House no., street, city, PIN" value={address} onChange={(e) => setAddress(e.target.value)} />
-      <button className="btn btn-gradient" disabled={!dirty} onClick={save}>Save details</button>
+      <button className="btn btn-gradient" disabled={!dirty || saving} onClick={save}>{saving ? <span className="spinner small" /> : 'Save details'}</button>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import Icon from '../../components/Icon';
 import { Loader } from '../../components/Loading';
 import { PLACEHOLDER_IMG } from '../../lib/format';
 
-const EMPTY_FORM = { name: '', price: '', stock: '', description: '' };
+const EMPTY_FORM = { name: '', price: '', stock: '', description: '', category: '', unit: 'pc' };
 
 export default function AdminItems() {
   const [items, setItems] = useState<any[]>([]);
@@ -53,8 +53,8 @@ export default function AdminItems() {
 
   const openEditModal = (item: any) => {
     setEditingId(item._id);
-    // Backend PATCH only accepts stock and price
-    setForm({ name: item.name, price: String(item.price), stock: String(item.stock), description: item.description || '' });
+    // Backend PATCH accepts price, stock, category and unit
+    setForm({ name: item.name, price: String(item.price), stock: String(item.stock), description: item.description || '', category: item.category || '', unit: item.unit || 'pc' });
     setImageFile(null);
     setPreview(item.image || null);
     setModalVisible(true);
@@ -68,13 +68,20 @@ export default function AdminItems() {
     try {
       setSaving(true);
       if (editingId) {
-        await adminItemsAPI.update(editingId, { price: Number(form.price), stock: Number(form.stock) });
+        await adminItemsAPI.update(editingId, {
+          price: Number(form.price),
+          stock: Number(form.stock),
+          category: form.category.trim(),
+          unit: form.unit.trim() || 'pc',
+        });
       } else {
         const data = new FormData();
         data.append('name', form.name);
         data.append('price', form.price);
         data.append('stock', form.stock);
         data.append('description', form.description);
+        if (form.category.trim()) data.append('category', form.category.trim());
+        data.append('unit', form.unit.trim() || 'pc');
         if (imageFile) data.append('image', imageFile, imageFile.name);
         await adminItemsAPI.create(data);
       }
@@ -164,6 +171,13 @@ export default function AdminItems() {
             <input type="number" inputMode="decimal" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
             <label>Stock Quantity</label>
             <input type="number" inputMode="numeric" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+            <label>Category</label>
+            <input list="item-categories" placeholder="e.g. Vegetables, Fruits, Dairy" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+            <datalist id="item-categories">
+              {Array.from(new Set(items.map((i) => i.category).filter(Boolean))).map((c) => <option key={c} value={c} />)}
+            </datalist>
+            <label>Unit</label>
+            <input placeholder="pc, kg, dozen, litre" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
 
             {!editingId && (
               <>

@@ -45,7 +45,7 @@ export default function Checkout() {
   const clearCart = useCartStore((s) => s.clearCart);
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const updateProfile = useAuthStore((s) => s.updateProfile);
+  const saveDetails = useAuthStore((s) => s.saveDetails);
 
   // Details come from the account; the customer only edits them if something has changed.
   const [name, setName] = useState(user?.name || '');
@@ -66,7 +66,7 @@ export default function Checkout() {
   const total = subtotal;
 
   const finishOrderSuccess = (savedPhone: string, savedAddress: string) => {
-    updateProfile({ phone: savedPhone, address: savedAddress }); // remembered for next time
+    void saveDetails({ phone: savedPhone, address: savedAddress }); // remembered for next time, on the account too
     setOrdered(true);
     clearCart();
   };
@@ -100,7 +100,7 @@ export default function Checkout() {
     // Read what is actually in the fields, so a keyboard or autofill quirk can never leave stale state behind.
     const el = (n: string) => formRef.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${n}"]`)?.value ?? '';
     const fName = el('name').trim() || name.trim();
-    const fPhone = (el('phone') || phone).replace(/D/g, '');
+    const fPhone = (el('phone') || phone).replace(/\D/g, '');
     const fAddress = (el('address') || address).trim();
     const fNotes = el('notes') || notes;
 

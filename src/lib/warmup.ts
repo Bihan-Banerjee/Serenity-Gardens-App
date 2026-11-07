@@ -1,5 +1,5 @@
 import { App as CapApp } from '@capacitor/app';
-import api from './api';
+import api, { healthAPI } from './api';
 import { writeCache } from './cache';
 import { isNative } from './native';
 
@@ -10,10 +10,10 @@ const KEEP_ALIVE_MS = 4 * 60 * 1000;
 
 let inFlight = false;
 
-function ping() {
+// Startup: /items wakes the server and pre-fills the shop cache.
+function warmAndPrefill() {
   if (inFlight) return;
   inFlight = true;
-  // /items doubles as the warm-up request and pre-fills the shop cache.
   api
     .get('/items', { timeout: 90000 })
     .then((res) => { if (Array.isArray(res.data)) writeCache('items', res.data); })
@@ -21,8 +21,17 @@ function ping() {
     .finally(() => { inFlight = false; });
 }
 
+// Afterwards: /health keeps the server awake without touching the database.
+function ping() {
+  if (inFlight) return;
+  inFlight = true;
+  healthAPI.ping()
+    .catch(() => { /* ignore */ })
+    .finally(() => { inFlight = false; });
+}
+
 export function startBackendWarmup() {
-  ping();
+  warmAndPrefill();
   setInterval(() => { if (!document.hidden) ping(); }, KEEP_ALIVE_MS);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) ping(); });
   if (isNative) CapApp.addListener('resume', ping);

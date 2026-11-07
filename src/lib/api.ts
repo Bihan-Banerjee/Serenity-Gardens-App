@@ -41,6 +41,13 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (data: any) => api.post('/auth/login', data),
   register: (data: any) => api.post('/auth/register', data),
+  // Saves delivery phone and address on the account; returns the updated user.
+  updateMe: (data: { phone?: string; address?: string }) => api.patch('/auth/me', data),
+};
+
+// Lightweight liveness check: no database access, used to keep the free-tier server awake.
+export const healthAPI = {
+  ping: () => api.get('/health', { timeout: 90000 }),
 };
 
 // ── Items ─────────────────────────────────────────────────
@@ -84,8 +91,8 @@ export const adminItemsAPI = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
     
-  // Updates only price and stock as per your backend
-  update: (id: string, data: { price?: number; stock?: number }) => 
+  // Backend accepts price, stock, category and unit on update
+  update: (id: string, data: { price?: number; stock?: number; category?: string; unit?: string }) =>
     api.patch(`/items/${id}`, data),
     
   delete: (id: string) => api.delete(`/items/${id}`),
