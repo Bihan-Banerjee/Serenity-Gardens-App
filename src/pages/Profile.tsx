@@ -16,8 +16,12 @@ interface Order {
   items: { name: string; quantity: number; price: number }[];
   totalAmount?: number;
   paid: boolean;
-  razorpayPaymentId?: string; // present only for orders paid online
+  razorpayPaymentId?: string;
+  paymentMethod?: 'cod' | 'online'; // older orders do not have it
+  deliveryAddress?: { name?: string; phone?: string; address?: string; notes?: string };
 }
+
+const isOnline = (o: Order) => (o.paymentMethod ? o.paymentMethod === 'online' : !!o.razorpayPaymentId);
 
 const STATUS_CONFIG = {
   paid: { label: 'Paid', color: Colors.success },
@@ -46,8 +50,9 @@ function OrderCard({ order }: { order: Order }) {
           <div className="order-id">#{order._id.slice(-6).toUpperCase()}</div>
           <div className="muted small">
             {formatDate(order.createdAt)}
-            {order.razorpayPaymentId ? ' · Online' : ' · Cash on delivery'}
+            {isOnline(order) ? ' · Online' : ' · Cash on delivery'}
           </div>
+          {order.deliveryAddress?.address && <div className="muted small">Deliver to: {order.deliveryAddress.address}</div>}
         </div>
         <span className="status-badge" style={{ background: status.color + '22', color: status.color }}>{status.label}</span>
       </div>

@@ -47,7 +47,7 @@ export default function AdminOrders() {
       if (filter === 'paid' && !o.paid) return false;
       if (filter === 'pending' && o.paid) return false;
       if (!q) return true;
-      return [o._id.slice(-6), o.userId?.name, o.userId?.email, o.razorpayPaymentId]
+      return [o._id.slice(-6), o.userId?.name, o.userId?.email, o.razorpayPaymentId, o.deliveryAddress?.name, o.deliveryAddress?.phone, o.deliveryAddress?.address]
         .some((v) => String(v ?? '').toLowerCase().includes(q));
     });
     const by: Record<SortKey, (a: any, b: any) => number> = {
@@ -142,7 +142,20 @@ export default function AdminOrders() {
               </div>
               <div className="cust">{o.userId?.name || 'Unknown user'}</div>
               <div className="muted small">{o.userId?.email || 'No email'}</div>
+              <div className="muted small">
+                {(o.paymentMethod ? o.paymentMethod === 'online' : !!o.razorpayPaymentId) ? 'Paid online' : 'Cash on delivery'}
+              </div>
               {o.razorpayPaymentId && <div className="muted small">Txn: {o.razorpayPaymentId}</div>}
+              {o.deliveryAddress && (
+                <>
+                  <hr />
+                  <b className="small">Deliver to:</b>
+                  {o.deliveryAddress.name && <div className="muted small">{o.deliveryAddress.name}</div>}
+                  {o.deliveryAddress.phone && <div className="muted small">Phone: {o.deliveryAddress.phone}</div>}
+                  {o.deliveryAddress.address && <div className="muted small">{o.deliveryAddress.address}</div>}
+                  {o.deliveryAddress.notes && <div className="muted small">Note: {o.deliveryAddress.notes}</div>}
+                </>
+              )}
               <hr />
               <b className="small">Items ({o.items?.length}):</b>
               {o.items?.map((it: any, idx: number) => (
